@@ -7,9 +7,12 @@ interface PhotoCardProps {
   photo: Photo
   canDelete?: boolean
   onDelete?: (id: string) => void
+  selectable?: boolean
+  selected?: boolean
+  onSelect?: (id: string) => void
 }
 
-export default function PhotoCard({ photo, canDelete, onDelete }: PhotoCardProps) {
+export default function PhotoCard({ photo, canDelete, onDelete, selectable, selected, onSelect }: PhotoCardProps) {
   const [open, setOpen] = useState(false)
   const [downloading, setDownloading] = useState(false)
 
@@ -27,8 +30,8 @@ export default function PhotoCard({ photo, canDelete, onDelete }: PhotoCardProps
       {/* Thumbnail */}
       <div className="flex flex-col">
       <div
-        className="relative group cursor-pointer overflow-hidden rounded-xl bg-slate-100 aspect-square"
-        onClick={() => setOpen(true)}
+        className={`relative group cursor-pointer overflow-hidden rounded-xl bg-slate-100 aspect-square transition-all ${selected ? 'ring-2 ring-indigo-500 scale-95' : ''}`}
+        onClick={() => selectable ? onSelect?.(photo.id) : setOpen(true)}
       >
         <img
           src={photo.url}
@@ -36,6 +39,14 @@ export default function PhotoCard({ photo, canDelete, onDelete }: PhotoCardProps
           className="w-full h-full object-cover transition-transform group-hover:scale-105"
           loading="lazy"
         />
+        {/* Selection overlay */}
+        {selectable && (
+          <div className={`absolute inset-0 transition-colors ${selected ? 'bg-indigo-500/20' : ''} flex items-start justify-end p-2`}>
+            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selected ? 'bg-indigo-500 border-indigo-500' : 'border-white/70 bg-black/20'}`}>
+              {selected && <span className="text-white text-xs font-bold">✓</span>}
+            </div>
+          </div>
+        )}
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
           <span className="text-white text-xs font-medium truncate">{photo.participant_name}</span>

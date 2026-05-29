@@ -32,6 +32,8 @@ export default function EventPage() {
   const [caption, setCaption] = useState('')
   const [showPeople, setShowPeople] = useState(false)
   const [approvedList, setApprovedList] = useState<{id: string; name: string}[]>([])
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const autoSaveRef = useRef(false)
   const savedPhotoIds = useRef<Set<string>>(new Set())
 
@@ -180,6 +182,17 @@ export default function EventPage() {
     showToast('✅ Done! Tap "Save X Images" to save to Camera Roll')
   }
 
+  async function handleDownloadSelected() {
+    const selected = photos.filter(p => selectedIds.has(p.id))
+    if (selected.length === 0) return
+    showToast(`Fetching ${selected.length} photos...`)
+    await downloadAllOneByOne(selected)
+    selected.forEach(p => savedPhotoIds.current.add(p.id))
+    setSelectMode(false)
+    setSelectedIds(new Set())
+    showToast('✅ Selected photos saved!')
+  }
+
   function toggleAutoSave(val: boolean) {
     setAutoSaveState(val)
     autoSaveRef.current = val
@@ -225,6 +238,7 @@ export default function EventPage() {
           </div>
           <div className="flex gap-2 ml-3 shrink-0">
             <button onClick={() => setShowPeople(true)} className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-base hover:bg-slate-200 transition-colors" title="People">👥</button>
+            <button onClick={() => { setSelectMode(s => !s); setSelectedIds(new Set()) }} className={`w-9 h-9 rounded-full flex items-center justify-center text-base transition-colors ${selectMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 hover:bg-slate-200'}`} title="Select">☑️</button>
             <button onClick={() => setShowShare(true)} className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-base hover:bg-slate-200 transition-colors" title="Share">🔗</button>
             <button onClick={() => setShowSettings(true)} className={`w-9 h-9 rounded-full flex items-center justify-center text-base transition-colors ${autoSave ? 'bg-green-100' : 'bg-slate-100 hover:bg-slate-200'}`} title="Settings">⚙️</button>
             {isOrganizer && (
@@ -270,8 +284,11 @@ export default function EventPage() {
               <PhotoCard
                 key={photo.id}
                 photo={photo}
-                canDelete={isOrganizer || photo.participant_id === participant.id}
+                canDelete={!selectMode && (isOrganizer || photo.participant_id === participant.id)}
                 onDelete={handleDelete}
+                selectable={selectMode}
+                selected={selectedIds.has(photo.id)}
+                onSelect={id => setSelectedIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })}
               />
             ))}
           </div>
@@ -316,6 +333,29 @@ export default function EventPage() {
 
       {/* Camera */}
       {showCamera && <Camera onCapture={handleCapturedPhoto} onClose={() => setShowCamera(false)} uploading={uploading} />}
+
+      {/* Select mode bar */}
+      {selectMode && (
+        <div className="fixed bottom-24 left-0 right-0 z-30 flex justify-center px-4">
+          <div className="bg-slate-900 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-2xl">
+            <span className="text-white text-sm font-semibold">{selectedIds.size} selected</span>
+            <button
+              onClick={handleDownloadSelected}
+              disabled={selectedIds.size === 0}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-semibold disabled:opacity-40 hover:bg-indigo-700 transition-colors"
+            >
+              ⬇ Download
+            </button>
+            <button
+              onClick={() => setSelectedIds(new Set(photos.map(p => p.id)))}
+              className="bg-zinc-700 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-zinc-600 transition-colors"
+            >
+              All
+            </button>
+            <button onClick={() => { setSelectMode(false); setSelectedIds(new Set()) }} className="text-zinc-400 text-xs">Cancel</button>
+          </div>
+        </div>
+      )}
 
       {/* People / Leaderboard Sheet */}
       {showPeople && (
