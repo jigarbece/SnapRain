@@ -58,12 +58,20 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4 relative">
-      {/* Logo */}
-      <div className="text-center mb-8">
-        <img src="/logo.png" alt="SnapRain" className="w-24 h-24 mx-auto mb-3 rounded-3xl shadow-xl shadow-indigo-200" />
-        <h1 className="text-3xl font-bold text-slate-900">snap<span className="text-blue-500">Rain</span></h1>
-        <p className="text-slate-500 mt-1.5 text-sm font-medium">Every shot, shared with everyone — instantly 🌧️</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-blue-50 flex flex-col items-center justify-center px-4 pb-16">
+      {/* Branding */}
+      <div className="text-center mb-10">
+        <div className="relative inline-block mb-5">
+          <div className="absolute inset-0 bg-indigo-400 rounded-3xl blur-xl opacity-30 scale-110" />
+          <img src="/logo.png" alt="SnapRain" className="relative w-28 h-28 mx-auto rounded-3xl shadow-2xl shadow-indigo-300 object-cover" />
+        </div>
+        <h1 className="text-4xl font-black text-slate-900 tracking-tight">snap<span className="text-indigo-500">Rain</span></h1>
+        <p className="text-slate-500 mt-2 text-sm font-medium leading-relaxed">Every shot, shared with everyone<br/>— instantly 🌧️</p>
+        <div className="flex items-center justify-center gap-4 mt-4">
+          {['📸 No signup', '⚡ Real-time', '💾 Auto-save'].map(f => (
+            <span key={f} className="text-[10px] font-semibold text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">{f}</span>
+          ))}
+        </div>
       </div>
 
       {/* Card */}
@@ -155,10 +163,16 @@ export default function HomePage() {
         </div>
       </div>
 
-      <p className="text-slate-400 text-xs mt-6 text-center max-w-xs">
-        No account needed · Photos shared instantly · Auto-save to your gallery
-      </p>
-      <p className="absolute bottom-4 text-slate-300 text-[10px]">Designed and Conceptualized by Jigar Pandya</p>
+      <div className="mt-8 text-center">
+        <a
+          href="mailto:curiologhtforyou@gmail.com"
+          className="inline-flex items-center gap-1.5 text-slate-400 text-xs hover:text-indigo-500 transition-colors group"
+        >
+          <span className="w-5 h-px bg-slate-300 group-hover:bg-indigo-300 transition-colors" />
+          Designed &amp; Conceptualized by <span className="font-semibold text-slate-500 group-hover:text-indigo-600">Jigar Pandya</span>
+          <span className="w-5 h-px bg-slate-300 group-hover:bg-indigo-300 transition-colors" />
+        </a>
+      </div>
     </div>
   )
 }

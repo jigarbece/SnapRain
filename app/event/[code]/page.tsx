@@ -245,9 +245,9 @@ export default function EventPage() {
       <div className="sticky top-0 bg-white border-b border-slate-200 z-30 px-4 py-3 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <img src="/logo.png" alt="SnapRain" className="w-4 h-4 object-contain" />
-              <span className="text-indigo-500 text-[10px] font-bold tracking-wide uppercase">SnapRain</span>
+            <div className="flex items-center gap-2 mb-0.5">
+              <img src="/logo.png" alt="SnapRain" className="w-5 h-5 rounded-md object-cover shadow-sm" />
+              <span className="text-indigo-600 text-xs font-black tracking-wide">snap<span className="text-slate-700">Rain</span></span>
             </div>
             <h1 className="text-slate-900 font-bold text-base truncate">{event?.title}</h1>
             <p className="text-slate-400 text-xs">{participantCount} people · {photos.length} photos</p>
@@ -345,7 +345,9 @@ export default function EventPage() {
             </span>
           </button>
         </div>
-        <p className="text-center text-slate-300 text-[9px] mt-2">Designed and Conceptualized by Jigar Pandya</p>
+        <a href="mailto:curiologhtforyou@gmail.com" className="block text-center text-slate-400 text-[10px] mt-2 hover:text-indigo-500 transition-colors">
+          Designed &amp; Conceptualized by <span className="font-semibold">Jigar Pandya</span>
+        </a>
       </div>
 
       {/* Camera */}

@@ -186,9 +186,9 @@ export default function OrganizerPage() {
         <div className="flex items-center gap-3">
           <button onClick={() => router.push(`/event/${code}`)} className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-sm text-slate-600 hover:bg-slate-200 transition-colors">←</button>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <img src="/logo.png" alt="SnapRain" className="w-4 h-4 object-contain" />
-              <span className="text-indigo-500 text-[10px] font-bold tracking-wide uppercase">SnapRain</span>
+            <div className="flex items-center gap-2 mb-0.5">
+              <img src="/logo.png" alt="SnapRain" className="w-5 h-5 rounded-md object-cover shadow-sm" />
+              <span className="text-indigo-600 text-xs font-black tracking-wide">snap<span className="text-slate-700">Rain</span></span>
             </div>
             <h1 className="text-slate-900 font-bold text-base truncate">👑 {event?.title}</h1>
             <p className="text-slate-400 text-xs">{approvedParticipants.length} approved · {photos.length} photos</p>
@@ -427,7 +427,9 @@ export default function OrganizerPage() {
             {event?.is_locked ? '🔒 Locked' : '🔓 Lock'}
           </button>
         </div>
-        <p className="text-center text-slate-300 text-[9px] mt-2">Designed and Conceptualized by Jigar Pandya</p>
+        <a href="mailto:curiologhtforyou@gmail.com" className="block text-center text-slate-400 text-[10px] mt-2 hover:text-indigo-500 transition-colors">
+          Designed &amp; Conceptualized by <span className="font-semibold">Jigar Pandya</span>
+        </a>
       </div>
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (

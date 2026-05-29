@@ -89,11 +89,12 @@ export default function JoinPage() {
   )
 
   if (waiting) return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4 text-center relative">
-      <div className="flex items-center gap-2 mb-8">
-        <img src="/logo.png" alt="SnapRain" className="w-6 h-6 object-contain" />
-        <span className="text-indigo-600 font-bold tracking-wide">snap<span className="text-slate-800">Rain</span></span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-blue-50 flex flex-col items-center justify-center px-4 text-center pb-16">
+      <div className="relative inline-block mb-6">
+        <div className="absolute inset-0 bg-indigo-400 rounded-2xl blur-lg opacity-25 scale-110" />
+        <img src="/logo.png" alt="SnapRain" className="relative w-14 h-14 rounded-2xl shadow-xl shadow-indigo-200 object-cover" />
       </div>
+      <h1 className="text-xl font-black text-slate-900 tracking-tight mb-6">snap<span className="text-indigo-500">Rain</span></h1>
       <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 animate-pulse">⏳</div>
       <h2 className="text-slate-900 text-xl font-bold mb-2">Waiting for approval</h2>
       <p className="text-slate-500 text-sm mb-1">The organizer needs to approve your request</p>
@@ -109,20 +110,35 @@ export default function JoinPage() {
       >
         Cancel
       </button>
-      <p className="absolute bottom-4 text-slate-300 text-[10px]">Designed and Conceptualized by Jigar Pandya</p>
+      <div className="mt-10">
+        <a
+          href="mailto:curiologhtforyou@gmail.com"
+          className="inline-flex items-center gap-1.5 text-slate-400 text-xs hover:text-indigo-500 transition-colors group"
+        >
+          <span className="w-5 h-px bg-slate-300 group-hover:bg-indigo-300 transition-colors" />
+          Designed &amp; Conceptualized by <span className="font-semibold text-slate-500 group-hover:text-indigo-600">Jigar Pandya</span>
+          <span className="w-5 h-px bg-slate-300 group-hover:bg-indigo-300 transition-colors" />
+        </a>
+      </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4 relative">
-      <div className="flex items-center gap-2 mb-8">
-        <img src="/logo.png" alt="SnapRain" className="w-7 h-7 object-contain" />
-        <span className="text-indigo-600 font-bold text-lg tracking-wide">snap<span className="text-slate-800">Rain</span></span>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-blue-50 flex flex-col items-center justify-center px-4 pb-16">
+      {/* Branding */}
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-indigo-200">🎉</div>
-        <h1 className="text-2xl font-bold text-slate-900">You&apos;re invited!</h1>
-        {eventTitle && <p className="text-indigo-600 mt-1.5 font-semibold">{eventTitle}</p>}
+        <div className="relative inline-block mb-4">
+          <div className="absolute inset-0 bg-indigo-400 rounded-2xl blur-lg opacity-25 scale-110" />
+          <img src="/logo.png" alt="SnapRain" className="relative w-16 h-16 rounded-2xl shadow-xl shadow-indigo-200 object-cover" />
+        </div>
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">snap<span className="text-indigo-500">Rain</span></h1>
+        <p className="text-slate-400 text-xs mt-1">Every shot, shared instantly 🌧️</p>
+      </div>
+
+      <div className="text-center mb-6">
+        <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 shadow-lg shadow-indigo-200">🎉</div>
+        <h2 className="text-xl font-bold text-slate-900">You&apos;re invited!</h2>
+        {eventTitle && <p className="text-indigo-600 mt-1 font-semibold text-sm">{eventTitle}</p>}
       </div>
 
       <div className="w-full max-w-sm bg-white rounded-2xl p-6 border border-slate-200 shadow-xl shadow-slate-100">
@@ -150,7 +166,17 @@ export default function JoinPage() {
       </div>
 
       <p className="text-slate-400 text-xs mt-4">Code: <span className="font-mono font-bold text-slate-600">{code}</span></p>
-      <p className="absolute bottom-4 text-slate-300 text-[10px]">Designed and Conceptualized by Jigar Pandya</p>
+
+      <div className="mt-8 text-center">
+        <a
+          href="mailto:curiologhtforyou@gmail.com"
+          className="inline-flex items-center gap-1.5 text-slate-400 text-xs hover:text-indigo-500 transition-colors group"
+        >
+          <span className="w-5 h-px bg-slate-300 group-hover:bg-indigo-300 transition-colors" />
+          Designed &amp; Conceptualized by <span className="font-semibold text-slate-500 group-hover:text-indigo-600">Jigar Pandya</span>
+          <span className="w-5 h-px bg-slate-300 group-hover:bg-indigo-300 transition-colors" />
+        </a>
+      </div>
     </div>
   )
 }
