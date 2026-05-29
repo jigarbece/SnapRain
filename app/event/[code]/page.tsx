@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase, Event, Photo } from '@/lib/supabase'
 import {
   getParticipant, getOrganizerKey, getAutoSave, setAutoSave as persistAutoSave,
-  downloadPhoto, downloadAllOneByOne, autoSavePhoto, compressImage
+  downloadPhoto, downloadAllOneByOne, autoSavePhoto, compressImage, clearParticipant
 } from '@/lib/utils'
 import Camera from '@/components/Camera'
 import PhotoCard from '@/components/PhotoCard'
@@ -69,6 +69,8 @@ export default function EventPage() {
         if (part?.status === 'approved') {
           setApproved(true)
         } else {
+          // Participant deleted (denied) or still pending — clear localStorage to prevent redirect loop
+          clearParticipant(code)
           router.push(`/join/${code}`)
           return
         }
@@ -310,7 +312,7 @@ export default function EventPage() {
       </div>
 
       {/* Bottom Nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-8 py-4 z-30 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-8 pt-4 pb-3 z-30 shadow-lg">
         <div className="flex items-center justify-between max-w-sm mx-auto">
           {/* Download all */}
           <button
@@ -343,6 +345,7 @@ export default function EventPage() {
             </span>
           </button>
         </div>
+        <p className="text-center text-slate-300 text-[9px] mt-2">Designed and Conceptualized by Jigar Pandya</p>
       </div>
 
       {/* Camera */}

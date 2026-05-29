@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase, Participant } from '@/lib/supabase'
-import { saveParticipant, getParticipant } from '@/lib/utils'
+import { saveParticipant, getParticipant, clearParticipant } from '@/lib/utils'
 
 export default function JoinPage() {
   const { code } = useParams<{ code: string }>()
@@ -43,8 +43,10 @@ export default function JoinPage() {
         { event: 'DELETE', schema: 'public', table: 'participants', filter: `id=eq.${pendingParticipantId}` },
         () => {
           supabase.removeChannel(channel)
+          clearParticipant(code)          // ← clear localStorage so no redirect loop
           setWaiting(false)
           setPendingParticipantId(null)
+          setJoining(false)
           setError('Your request was declined. Please try again.')
         }
       )
@@ -87,7 +89,7 @@ export default function JoinPage() {
   )
 
   if (waiting) return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4 text-center relative">
       <div className="flex items-center gap-2 mb-8">
         <img src="/logo.png" alt="SnapRain" className="w-6 h-6 object-contain" />
         <span className="text-indigo-600 font-bold tracking-wide">snap<span className="text-slate-800">Rain</span></span>
@@ -102,16 +104,17 @@ export default function JoinPage() {
         {eventTitle && <p className="text-indigo-500 text-xs mt-1 font-medium">{eventTitle}</p>}
       </div>
       <button
-        onClick={() => { setWaiting(false); setJoining(false); setPendingParticipantId(null) }}
+        onClick={() => { clearParticipant(code); setWaiting(false); setJoining(false); setPendingParticipantId(null) }}
         className="mt-8 text-slate-400 text-xs underline"
       >
         Cancel
       </button>
+      <p className="absolute bottom-4 text-slate-300 text-[10px]">Designed and Conceptualized by Jigar Pandya</p>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4 relative">
       <div className="flex items-center gap-2 mb-8">
         <img src="/logo.png" alt="SnapRain" className="w-7 h-7 object-contain" />
         <span className="text-indigo-600 font-bold text-lg tracking-wide">snap<span className="text-slate-800">Rain</span></span>
@@ -147,6 +150,7 @@ export default function JoinPage() {
       </div>
 
       <p className="text-slate-400 text-xs mt-4">Code: <span className="font-mono font-bold text-slate-600">{code}</span></p>
+      <p className="absolute bottom-4 text-slate-300 text-[10px]">Designed and Conceptualized by Jigar Pandya</p>
     </div>
   )
 }

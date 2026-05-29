@@ -58,7 +58,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4 relative">
       {/* Logo */}
       <div className="text-center mb-8">
         <img src="/logo.png" alt="SnapRain" className="w-24 h-24 mx-auto mb-3 rounded-3xl shadow-xl shadow-indigo-200" />
@@ -158,6 +158,7 @@ export default function HomePage() {
       <p className="text-slate-400 text-xs mt-6 text-center max-w-xs">
         No account needed · Photos shared instantly · Auto-save to your gallery
       </p>
+      <p className="absolute bottom-4 text-slate-300 text-[10px]">Designed and Conceptualized by Jigar Pandya</p>
     </div>
   )
 }

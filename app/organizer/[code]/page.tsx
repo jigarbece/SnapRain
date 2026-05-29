@@ -411,7 +411,7 @@ export default function OrganizerPage() {
       </div>
 
       {/* Bottom bar — share + lock only */}
-      <div className="sticky bottom-0 bg-white border-t border-slate-200 p-4 shadow-lg">
+      <div className="sticky bottom-0 bg-white border-t border-slate-200 px-4 pt-4 pb-3 shadow-lg">
         <div className="flex gap-3">
           <button
             onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/join/${code}`); showToast('Link copied!') }}
@@ -427,6 +427,7 @@ export default function OrganizerPage() {
             {event?.is_locked ? '🔒 Locked' : '🔓 Lock'}
           </button>
         </div>
+        <p className="text-center text-slate-300 text-[9px] mt-2">Designed and Conceptualized by Jigar Pandya</p>
       </div>
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (

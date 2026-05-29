@@ -147,6 +147,10 @@ export function saveParticipant(code: string, data: { id: string; name: string }
   localStorage.setItem(`ps_participant_${code}`, JSON.stringify(data))
 }
 
+export function clearParticipant(code: string) {
+  localStorage.removeItem(`ps_participant_${code}`)
+}
+
 export function getOrganizerKey(code: string): string | null {
   return localStorage.getItem(`ps_org_${code}`)
 }
