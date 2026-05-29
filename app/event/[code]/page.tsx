@@ -243,6 +243,10 @@ export default function EventPage() {
       <div className="sticky top-0 bg-white border-b border-slate-200 z-30 px-4 py-3 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <img src="/logo.png" alt="SnapRain" className="w-4 h-4 object-contain" />
+              <span className="text-indigo-500 text-[10px] font-bold tracking-wide uppercase">SnapRain</span>
+            </div>
             <h1 className="text-slate-900 font-bold text-base truncate">{event?.title}</h1>
             <p className="text-slate-400 text-xs">{participantCount} people · {photos.length} photos</p>
           </div>

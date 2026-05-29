@@ -186,6 +186,10 @@ export default function OrganizerPage() {
         <div className="flex items-center gap-3">
           <button onClick={() => router.push(`/event/${code}`)} className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-sm text-slate-600 hover:bg-slate-200 transition-colors">←</button>
           <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <img src="/logo.png" alt="SnapRain" className="w-4 h-4 object-contain" />
+              <span className="text-indigo-500 text-[10px] font-bold tracking-wide uppercase">SnapRain</span>
+            </div>
             <h1 className="text-slate-900 font-bold text-base truncate">👑 {event?.title}</h1>
             <p className="text-slate-400 text-xs">{approvedParticipants.length} approved · {photos.length} photos</p>
           </div>
@@ -232,6 +236,17 @@ export default function OrganizerPage() {
       <div className="flex-1 p-3">
         {tab === 'photos' ? (
           <>
+            {photos.length > 0 && (
+              <div className="mb-3">
+                <button
+                  onClick={handleDownloadAll}
+                  disabled={downloadingAll}
+                  className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm shadow-indigo-200 flex items-center justify-center gap-2"
+                >
+                  {downloadingAll ? '⏳ Preparing...' : `⬇ Save All ${photos.length} Photos`}
+                </button>
+              </div>
+            )}
             {photos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">📷</div>
@@ -395,28 +410,21 @@ export default function OrganizerPage() {
         ) : null}
       </div>
 
-      {/* Bottom actions */}
+      {/* Bottom bar — share + lock only */}
       <div className="sticky bottom-0 bg-white border-t border-slate-200 p-4 shadow-lg">
         <div className="flex gap-3">
           <button
-            onClick={handleDownloadAll}
-            disabled={downloadingAll || photos.length === 0}
-            className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200"
-          >
-            {downloadingAll ? 'Saving...' : `⬇ Save All (${photos.length})`}
-          </button>
-          <button
             onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/join/${code}`); showToast('Link copied!') }}
-            className="bg-slate-100 text-slate-700 px-4 py-3 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors"
+            className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors"
           >
-            🔗
+            🔗 Copy Invite Link
           </button>
           <button
             onClick={handleToggleLock}
-            className={`px-4 py-3 rounded-xl font-semibold text-sm transition-colors ${event?.is_locked ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+            className={`px-5 py-3 rounded-xl font-semibold text-sm transition-colors ${event?.is_locked ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
             title={event?.is_locked ? 'Unlock event' : 'Lock event'}
           >
-            {event?.is_locked ? '🔒' : '🔓'}
+            {event?.is_locked ? '🔒 Locked' : '🔓 Lock'}
           </button>
         </div>
       </div>

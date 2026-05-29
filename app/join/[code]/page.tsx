@@ -88,6 +88,10 @@ export default function JoinPage() {
 
   if (waiting) return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4 text-center">
+      <div className="flex items-center gap-2 mb-8">
+        <img src="/logo.png" alt="SnapRain" className="w-6 h-6 object-contain" />
+        <span className="text-indigo-600 font-bold tracking-wide">snap<span className="text-slate-800">Rain</span></span>
+      </div>
       <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 animate-pulse">⏳</div>
       <h2 className="text-slate-900 text-xl font-bold mb-2">Waiting for approval</h2>
       <p className="text-slate-500 text-sm mb-1">The organizer needs to approve your request</p>
@@ -108,6 +112,10 @@ export default function JoinPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4">
+      <div className="flex items-center gap-2 mb-8">
+        <img src="/logo.png" alt="SnapRain" className="w-7 h-7 object-contain" />
+        <span className="text-indigo-600 font-bold text-lg tracking-wide">snap<span className="text-slate-800">Rain</span></span>
+      </div>
       <div className="text-center mb-8">
         <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-indigo-200">🎉</div>
         <h1 className="text-2xl font-bold text-slate-900">You&apos;re invited!</h1>
