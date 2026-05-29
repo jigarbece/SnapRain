@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase, Event, Photo, Participant } from '@/lib/supabase'
-import { getOrganizerKey, downloadAllAsZip } from '@/lib/utils'
+import { getOrganizerKey, downloadAllOneByOne } from '@/lib/utils'
 import PhotoCard from '@/components/PhotoCard'
 
 export default function OrganizerPage() {
@@ -64,11 +64,12 @@ export default function OrganizerPage() {
   }
 
   async function handleDownloadAll() {
-    if (!event) return
+    if (photos.length === 0) return
     setDownloadingAll(true)
-    showToast('Preparing ZIP...')
-    await downloadAllAsZip(photos, event.title)
+    showToast(`Downloading ${photos.length} photos...`)
+    await downloadAllOneByOne(photos)
     setDownloadingAll(false)
+    showToast('✅ All photos saved!')
   }
 
   // Photos per participant
@@ -165,7 +166,7 @@ export default function OrganizerPage() {
             disabled={downloadingAll || photos.length === 0}
             className="flex-1 bg-white text-black py-3 rounded-xl font-semibold text-sm disabled:opacity-50"
           >
-            {downloadingAll ? 'Preparing...' : `⬇ Download All (${photos.length})`}
+            {downloadingAll ? 'Saving...' : `⬇ Save All (${photos.length})`}
           </button>
           <button
             onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/join/${code}`); showToast('Link copied!') }}

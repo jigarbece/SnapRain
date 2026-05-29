@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase, Event, Photo } from '@/lib/supabase'
 import {
   getParticipant, getOrganizerKey, getAutoSave, setAutoSave as persistAutoSave,
-  downloadPhoto, downloadAllAsZip, compressImage
+  downloadPhoto, downloadAllOneByOne, compressImage
 } from '@/lib/utils'
 import Camera from '@/components/Camera'
 import PhotoCard from '@/components/PhotoCard'
@@ -23,6 +23,7 @@ export default function EventPage() {
   const [showShare, setShowShare] = useState(false)
   const [autoSave, setAutoSaveState] = useState(false)
   const [downloadingAll, setDownloadingAll] = useState(false)
+  const [downloadProgress, setDownloadProgress] = useState({ done: 0, total: 0 })
   const [toast, setToast] = useState('')
   const autoSaveRef = useRef(false)
 
@@ -110,11 +111,16 @@ export default function EventPage() {
   }
 
   async function handleDownloadAll() {
-    if (!event || photos.length === 0) return
+    if (photos.length === 0) return
     setDownloadingAll(true)
-    showToast('Preparing ZIP...')
-    await downloadAllAsZip(photos, event.title)
+    setDownloadProgress({ done: 0, total: photos.length })
+    showToast(`Downloading ${photos.length} photos...`)
+    await downloadAllOneByOne(photos, (done, total) => {
+      setDownloadProgress({ done, total })
+    })
     setDownloadingAll(false)
+    setDownloadProgress({ done: 0, total: 0 })
+    showToast('✅ All photos saved!')
   }
 
   function toggleAutoSave(val: boolean) {
@@ -199,7 +205,11 @@ export default function EventPage() {
             className="flex flex-col items-center gap-1 disabled:opacity-40 text-zinc-400 hover:text-white transition-colors"
           >
             <span className="text-2xl">⬇️</span>
-            <span className="text-[10px]">{downloadingAll ? 'Zipping...' : 'Save All'}</span>
+            <span className="text-[10px]">
+              {downloadingAll
+                ? `${downloadProgress.done}/${downloadProgress.total}`
+                : 'Save All'}
+            </span>
           </button>
 
           {/* Camera */}

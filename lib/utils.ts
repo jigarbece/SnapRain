@@ -47,34 +47,29 @@ export async function downloadPhoto(url: string, filename: string) {
   URL.revokeObjectURL(blobUrl)
 }
 
-export async function downloadAllAsZip(
+// Download all photos one by one with a small delay between each
+export async function downloadAllOneByOne(
   photos: { url: string; participant_name: string; created_at: string }[],
-  eventTitle: string
+  onProgress?: (done: number, total: number) => void
 ) {
-  const JSZip = (await import('jszip')).default
-  const zip = new JSZip()
-  const folder = zip.folder(eventTitle) || zip
-
-  await Promise.all(
-    photos.map(async (photo, i) => {
-      try {
-        const res = await fetch(photo.url)
-        const blob = await res.blob()
-        const name = `${String(i + 1).padStart(3, '0')}_${photo.participant_name.replace(/\s+/g, '_')}.jpg`
-        folder.file(name, blob)
-      } catch (_) {}
-    })
-  )
-
-  const zipBlob = await zip.generateAsync({ type: 'blob' })
-  const url = URL.createObjectURL(zipBlob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${eventTitle.replace(/\s+/g, '_')}_photos.zip`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  for (let i = 0; i < photos.length; i++) {
+    const photo = photos[i]
+    try {
+      const res = await fetch(photo.url)
+      const blob = await res.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = `snaprain_${String(i + 1).padStart(3, '0')}_${photo.participant_name.replace(/\s+/g, '_')}.jpg`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(blobUrl)
+      onProgress?.(i + 1, photos.length)
+      // Small delay so browser doesn't block multiple downloads
+      await new Promise(r => setTimeout(r, 400))
+    } catch (_) {}
+  }
 }
 
 export function getParticipant(code: string): { id: string; name: string } | null {
