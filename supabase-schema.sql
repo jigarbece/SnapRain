@@ -19,6 +19,7 @@ create table if not exists participants (
   id         uuid primary key default gen_random_uuid(),
   event_id   uuid references events(id) on delete cascade,
   name       text not null,
+  status     text not null default 'pending',  -- 'pending' | 'approved'
   joined_at  timestamptz default now()
 );
 
@@ -44,6 +45,8 @@ create policy "public_insert_events" on events       for insert with check (true
 
 create policy "public_read_participants"   on participants for select using (true);
 create policy "public_insert_participants" on participants for insert with check (true);
+create policy "public_update_participants" on participants for update using (true);
+create policy "public_delete_participants" on participants for delete using (true);
 
 create policy "public_read_photos"   on photos for select using (true);
 create policy "public_insert_photos" on photos for insert with check (true);

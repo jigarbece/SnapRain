@@ -14,8 +14,6 @@ export default function HomePage() {
   const [creating, setCreating] = useState(false)
 
   const [joinCode, setJoinCode] = useState('')
-  const [joinName, setJoinName] = useState('')
-  const [joining, setJoining] = useState(false)
   const [error, setError] = useState('')
 
   async function handleCreate(e: React.FormEvent) {
@@ -33,17 +31,13 @@ export default function HomePage() {
       const { data: event, error: eventErr } = await supabase
         .from('events')
         .insert({ title: eventTitle.trim(), code, organizer_name: organizerName.trim(), organizer_key: organizerKey, expires_at: expiresAt })
-        .select()
-        .single()
-
+        .select().single()
       if (eventErr) throw eventErr
 
       const { data: participant, error: partErr } = await supabase
         .from('participants')
-        .insert({ event_id: event.id, name: organizerName.trim() })
-        .select()
-        .single()
-
+        .insert({ event_id: event.id, name: organizerName.trim(), status: 'approved' })
+        .select().single()
       if (partErr) throw partErr
 
       saveParticipant(code, { id: participant.id, name: organizerName.trim() })
@@ -56,60 +50,37 @@ export default function HomePage() {
     }
   }
 
-  async function handleJoin(e: React.FormEvent) {
+  function handleJoin(e: React.FormEvent) {
     e.preventDefault()
     const code = joinCode.trim().toUpperCase()
-    if (!code || !joinName.trim()) return
-    setJoining(true)
-    setError('')
-    try {
-      const { data: event, error: eventErr } = await supabase
-        .from('events')
-        .select()
-        .eq('code', code)
-        .single()
-
-      if (eventErr || !event) throw new Error('Event not found. Check the code.')
-      if (event.expires_at && new Date(event.expires_at) < new Date()) {
-        throw new Error('This event has expired.')
-      }
-
-      const { data: participant, error: partErr } = await supabase
-        .from('participants')
-        .insert({ event_id: event.id, name: joinName.trim() })
-        .select()
-        .single()
-
-      if (partErr) throw partErr
-
-      saveParticipant(code, { id: participant.id, name: joinName.trim() })
-      router.push(`/event/${code}`)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setJoining(false)
-    }
+    if (!code) return
+    router.push(`/join/${code}`)
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4">
+      {/* Logo */}
       <div className="text-center mb-8">
-        <div className="text-5xl mb-3">🌧️</div>
-        <h1 className="text-3xl font-bold text-white">SnapRain</h1>
-        <p className="text-zinc-400 mt-2 text-sm">Photos rain down to everyone, instantly</p>
+        <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-indigo-200">
+          📸
+        </div>
+        <h1 className="text-3xl font-bold text-slate-900">SnapRain</h1>
+        <p className="text-slate-500 mt-1.5 text-sm">Photos shared instantly with everyone at your event</p>
       </div>
 
-      <div className="w-full max-w-sm bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800">
-        <div className="flex">
+      {/* Card */}
+      <div className="w-full max-w-sm bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-100">
+        {/* Tabs */}
+        <div className="flex border-b border-slate-100">
           <button
             onClick={() => { setTab('create'); setError('') }}
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'create' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}`}
+            className={`flex-1 py-3.5 text-sm font-semibold transition-colors ${tab === 'create' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
           >
             Create Event
           </button>
           <button
             onClick={() => { setTab('join'); setError('') }}
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'join' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}`}
+            className={`flex-1 py-3.5 text-sm font-semibold transition-colors ${tab === 'join' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
           >
             Join Event
           </button>
@@ -119,9 +90,9 @@ export default function HomePage() {
           {tab === 'create' ? (
             <form onSubmit={handleCreate} className="flex flex-col gap-4">
               <div>
-                <label className="text-xs text-zinc-400 block mb-1">Event Name</label>
+                <label className="text-xs font-medium text-slate-500 block mb-1.5">Event Name</label>
                 <input
-                  className="w-full bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-white/20 placeholder-zinc-500"
+                  className="w-full bg-slate-50 text-slate-900 rounded-xl px-4 py-3 text-sm outline-none border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 placeholder-slate-400 transition"
                   placeholder="John's Birthday Party"
                   value={eventTitle}
                   onChange={e => setEventTitle(e.target.value)}
@@ -129,9 +100,9 @@ export default function HomePage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-zinc-400 block mb-1">Your Name</label>
+                <label className="text-xs font-medium text-slate-500 block mb-1.5">Your Name</label>
                 <input
-                  className="w-full bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-white/20 placeholder-zinc-500"
+                  className="w-full bg-slate-50 text-slate-900 rounded-xl px-4 py-3 text-sm outline-none border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 placeholder-slate-400 transition"
                   placeholder="Alex"
                   value={organizerName}
                   onChange={e => setOrganizerName(e.target.value)}
@@ -139,9 +110,9 @@ export default function HomePage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-zinc-400 block mb-1">Event Expires</label>
+                <label className="text-xs font-medium text-slate-500 block mb-1.5">Event Expires</label>
                 <select
-                  className="w-full bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-white/20"
+                  className="w-full bg-slate-50 text-slate-900 rounded-xl px-4 py-3 text-sm outline-none border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition"
                   value={expiryHours}
                   onChange={e => setExpiryHours(e.target.value)}
                 >
@@ -152,11 +123,11 @@ export default function HomePage() {
                   <option value="never">Never</option>
                 </select>
               </div>
-              {error && <p className="text-red-400 text-xs">{error}</p>}
+              {error && <p className="text-red-500 text-xs">{error}</p>}
               <button
                 type="submit"
                 disabled={creating}
-                className="w-full bg-white text-black font-semibold rounded-xl py-3 text-sm hover:bg-zinc-200 disabled:opacity-50 transition-colors"
+                className="w-full bg-indigo-600 text-white font-semibold rounded-xl py-3 text-sm hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-md shadow-indigo-200"
               >
                 {creating ? 'Creating...' : 'Create Event ✨'}
               </button>
@@ -164,9 +135,9 @@ export default function HomePage() {
           ) : (
             <form onSubmit={handleJoin} className="flex flex-col gap-4">
               <div>
-                <label className="text-xs text-zinc-400 block mb-1">Event Code</label>
+                <label className="text-xs font-medium text-slate-500 block mb-1.5">Event Code</label>
                 <input
-                  className="w-full bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-white/20 placeholder-zinc-500 uppercase tracking-widest text-center font-mono text-xl"
+                  className="w-full bg-slate-50 text-slate-900 rounded-xl px-4 py-3 text-sm outline-none border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 placeholder-slate-400 uppercase tracking-widest text-center font-mono text-xl transition"
                   placeholder="ABC123"
                   value={joinCode}
                   onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
@@ -174,31 +145,20 @@ export default function HomePage() {
                   required
                 />
               </div>
-              <div>
-                <label className="text-xs text-zinc-400 block mb-1">Your Name</label>
-                <input
-                  className="w-full bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-white/20 placeholder-zinc-500"
-                  placeholder="Sarah"
-                  value={joinName}
-                  onChange={e => setJoinName(e.target.value)}
-                  required
-                />
-              </div>
-              {error && <p className="text-red-400 text-xs">{error}</p>}
+              {error && <p className="text-red-500 text-xs">{error}</p>}
               <button
                 type="submit"
-                disabled={joining}
-                className="w-full bg-white text-black font-semibold rounded-xl py-3 text-sm hover:bg-zinc-200 disabled:opacity-50 transition-colors"
+                className="w-full bg-indigo-600 text-white font-semibold rounded-xl py-3 text-sm hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200"
               >
-                {joining ? 'Joining...' : 'Join Event 🎉'}
+                Continue to Join 🎉
               </button>
             </form>
           )}
         </div>
       </div>
 
-      <p className="text-zinc-600 text-xs mt-6 text-center max-w-xs">
-        No account needed · Photos rain to everyone · Auto-save to your gallery
+      <p className="text-slate-400 text-xs mt-6 text-center max-w-xs">
+        No account needed · Photos shared instantly · Auto-save to your gallery
       </p>
     </div>
   )

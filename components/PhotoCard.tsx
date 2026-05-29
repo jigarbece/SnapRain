@@ -26,7 +26,7 @@ export default function PhotoCard({ photo, canDelete, onDelete }: PhotoCardProps
     <>
       {/* Thumbnail */}
       <div
-        className="relative group cursor-pointer overflow-hidden rounded-xl bg-zinc-900 aspect-square"
+        className="relative group cursor-pointer overflow-hidden rounded-xl bg-slate-100 aspect-square"
         onClick={() => setOpen(true)}
       >
         <img
@@ -36,13 +36,13 @@ export default function PhotoCard({ photo, canDelete, onDelete }: PhotoCardProps
           loading="lazy"
         />
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
           <span className="text-white text-xs font-medium truncate">{photo.participant_name}</span>
         </div>
         {/* Download button on thumbnail */}
         <button
           onClick={handleDownload}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs hover:bg-black"
+          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 text-slate-700 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs hover:bg-white shadow-sm"
         >
           ↓
         </button>
@@ -51,33 +51,33 @@ export default function PhotoCard({ photo, canDelete, onDelete }: PhotoCardProps
       {/* Full screen modal */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/95 z-50 flex flex-col"
+          className="fixed inset-0 bg-black/90 z-50 flex flex-col"
           onClick={() => setOpen(false)}
         >
-          <div className="flex items-center justify-between p-4" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm" onClick={e => e.stopPropagation()}>
             <div>
               <p className="text-white font-semibold text-sm">{photo.participant_name}</p>
-              <p className="text-zinc-500 text-xs">{new Date(photo.created_at).toLocaleString()}</p>
+              <p className="text-white/50 text-xs">{new Date(photo.created_at).toLocaleString()}</p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleDownload}
                 disabled={downloading}
-                className="bg-white text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-200 disabled:opacity-50 flex items-center gap-1"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 shadow-md"
               >
                 {downloading ? '...' : '⬇ Save'}
               </button>
               {canDelete && onDelete && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onDelete(photo.id) }}
-                  className="bg-red-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-red-700"
+                  className="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-red-600"
                 >
                   Delete
                 </button>
               )}
               <button
                 onClick={() => setOpen(false)}
-                className="w-9 h-9 rounded-full bg-zinc-800 text-white flex items-center justify-center"
+                className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"
               >
                 ✕
               </button>

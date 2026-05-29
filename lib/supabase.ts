@@ -19,6 +19,7 @@ export type Participant = {
   id: string
   event_id: string
   name: string
+  status: 'pending' | 'approved'
   joined_at: string
 }
 
