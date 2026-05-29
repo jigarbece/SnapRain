@@ -26,6 +26,8 @@ export default function EventPage() {
   const [downloadingAll, setDownloadingAll] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState({ done: 0, total: 0 })
   const [toast, setToast] = useState('')
+  const [pendingBlob, setPendingBlob] = useState<Blob | null>(null)
+  const [caption, setCaption] = useState('')
   const autoSaveRef = useRef(false)
   const savedPhotoIds = useRef<Set<string>>(new Set())
 
@@ -99,16 +101,23 @@ export default function EventPage() {
   const handleCapturedPhoto = useCallback(async (blob: Blob) => {
     if (!event || !participant) return
     setShowCamera(false)
+    setPendingBlob(blob)
+    setCaption('')
+  }, [event, participant])
+
+  async function handleUploadWithCaption() {
+    if (!pendingBlob || !event || !participant) return
     setUploading(true)
+    setPendingBlob(null)
     try {
-      const compressed = await compressImage(blob)
+      const compressed = await compressImage(pendingBlob)
       const fileName = `${event.id}/${participant.id}_${Date.now()}.jpg`
       const { error: upErr } = await supabase.storage.from('photos').upload(fileName, compressed, { contentType: 'image/jpeg' })
       if (upErr) throw upErr
       const { data: urlData } = supabase.storage.from('photos').getPublicUrl(fileName)
       const { data: rec, error: dbErr } = await supabase.from('photos').insert({
         event_id: event.id, participant_id: participant.id, participant_name: participant.name,
-        storage_path: fileName, url: urlData.publicUrl,
+        storage_path: fileName, url: urlData.publicUrl, caption: caption.trim() || null,
       }).select().single()
       if (dbErr) throw dbErr
       setPhotos(prev => [rec, ...prev])
@@ -120,8 +129,9 @@ export default function EventPage() {
       console.error(err)
     } finally {
       setUploading(false)
+      setCaption('')
     }
-  }, [event, participant])
+  }
 
   async function handleDelete(photoId: string) {
     const photo = photos.find(p => p.id === photoId)
@@ -295,6 +305,39 @@ export default function EventPage() {
 
       {/* Camera */}
       {showCamera && <Camera onCapture={handleCapturedPhoto} onClose={() => setShowCamera(false)} uploading={uploading} />}
+
+      {/* Caption modal */}
+      {pendingBlob && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end">
+          <div className="w-full bg-white rounded-t-3xl p-6">
+            <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto mb-5" />
+            <h3 className="text-slate-900 font-bold text-lg mb-1">Add a caption</h3>
+            <p className="text-slate-400 text-xs mb-4">Optional — share what's happening in this photo</p>
+            <input
+              className="w-full bg-slate-50 text-slate-900 rounded-xl px-4 py-3 text-sm outline-none border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 placeholder-slate-400 transition mb-4"
+              placeholder="e.g. First dance! 💃"
+              value={caption}
+              onChange={e => setCaption(e.target.value)}
+              autoFocus
+              maxLength={120}
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setPendingBlob(null); setCaption('') }}
+                className="flex-1 bg-slate-100 text-slate-600 py-3.5 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors"
+              >
+                Discard
+              </button>
+              <button
+                onClick={handleUploadWithCaption}
+                className="flex-1 bg-indigo-600 text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200"
+              >
+                Share Photo 📸
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Settings Sheet */}
       {showSettings && (

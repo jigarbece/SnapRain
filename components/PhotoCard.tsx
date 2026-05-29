@@ -25,6 +25,7 @@ export default function PhotoCard({ photo, canDelete, onDelete }: PhotoCardProps
   return (
     <>
       {/* Thumbnail */}
+      <div className="flex flex-col">
       <div
         className="relative group cursor-pointer overflow-hidden rounded-xl bg-slate-100 aspect-square"
         onClick={() => setOpen(true)}
@@ -47,6 +48,10 @@ export default function PhotoCard({ photo, canDelete, onDelete }: PhotoCardProps
           ↓
         </button>
       </div>
+      {photo.caption && (
+        <p className="text-slate-500 text-[10px] px-1 pt-1 truncate italic">"{photo.caption}"</p>
+      )}
+      </div>
 
       {/* Full screen modal */}
       {open && (
@@ -58,6 +63,7 @@ export default function PhotoCard({ photo, canDelete, onDelete }: PhotoCardProps
             <div>
               <p className="text-white font-semibold text-sm">{photo.participant_name}</p>
               <p className="text-white/50 text-xs">{new Date(photo.created_at).toLocaleString()}</p>
+              {photo.caption && <p className="text-white/80 text-xs mt-1 italic">"{photo.caption}"</p>}
             </div>
             <div className="flex items-center gap-2">
               <button
