@@ -13,9 +13,12 @@ export default function OrganizerPage() {
   const [photos, setPhotos] = useState<Photo[]>([])
   const [participants, setParticipants] = useState<Participant[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'photos' | 'people' | 'requests'>('photos')
+  const [tab, setTab] = useState<'photos' | 'people' | 'requests' | 'settings'>('photos')
   const [downloadingAll, setDownloadingAll] = useState(false)
   const [toast, setToast] = useState('')
+  const [welcomeMsg, setWelcomeMsg] = useState('')
+  const [themeColor, setThemeColor] = useState('#4f46e5')
+  const [savingSettings, setSavingSettings] = useState(false)
 
   function showToast(msg: string) {
     setToast(msg)
@@ -36,7 +39,8 @@ export default function OrganizerPage() {
 
       const { data: parts } = await supabase.from('participants').select().eq('event_id', ev.id).order('joined_at')
       setParticipants(parts || [])
-
+      setWelcomeMsg(ev.welcome_message || '')
+      setThemeColor(ev.theme_color || '#4f46e5')
       setLoading(false)
     }
     load()
@@ -62,6 +66,27 @@ export default function OrganizerPage() {
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [event])
+
+  async function handleSaveSettings() {
+    if (!event) return
+    setSavingSettings(true)
+    await supabase.from('events').update({ welcome_message: welcomeMsg, theme_color: themeColor }).eq('id', event.id)
+    setEvent(prev => prev ? { ...prev, welcome_message: welcomeMsg, theme_color: themeColor } : prev)
+    setSavingSettings(false)
+    showToast('✅ Settings saved!')
+  }
+
+  async function handleCoverPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !event) return
+    const path = `covers/${event.id}_${Date.now()}.jpg`
+    const { error } = await supabase.storage.from('photos').upload(path, file, { contentType: file.type, upsert: true })
+    if (error) { showToast('Upload failed'); return }
+    const { data } = supabase.storage.from('photos').getPublicUrl(path)
+    await supabase.from('events').update({ cover_photo: data.publicUrl }).eq('id', event.id)
+    setEvent(prev => prev ? { ...prev, cover_photo: data.publicUrl } : prev)
+    showToast('✅ Cover photo updated!')
+  }
 
   async function handleToggleLock() {
     if (!event) return
@@ -152,20 +177,23 @@ export default function OrganizerPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 bg-white">
-        <button onClick={() => setTab('photos')} className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'photos' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50' : 'text-slate-400 hover:text-slate-600'}`}>
+      <div className="flex border-b border-slate-200 bg-white overflow-x-auto">
+        <button onClick={() => setTab('photos')} className={`flex-1 py-3 text-xs font-semibold whitespace-nowrap px-2 transition-colors ${tab === 'photos' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50' : 'text-slate-400 hover:text-slate-600'}`}>
           📷 Photos
         </button>
-        <button onClick={() => setTab('people')} className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'people' ? 'text-green-600 border-b-2 border-green-500 bg-green-50' : 'text-slate-400 hover:text-slate-600'}`}>
+        <button onClick={() => setTab('people')} className={`flex-1 py-3 text-xs font-semibold whitespace-nowrap px-2 transition-colors ${tab === 'people' ? 'text-green-600 border-b-2 border-green-500 bg-green-50' : 'text-slate-400 hover:text-slate-600'}`}>
           👥 People
         </button>
-        <button onClick={() => setTab('requests')} className={`flex-1 py-3 text-sm font-semibold relative transition-colors ${tab === 'requests' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50' : 'text-slate-400 hover:text-slate-600'}`}>
+        <button onClick={() => setTab('requests')} className={`flex-1 py-3 text-xs font-semibold whitespace-nowrap px-2 relative transition-colors ${tab === 'requests' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50' : 'text-slate-400 hover:text-slate-600'}`}>
           🔔 Requests
           {pendingParticipants.length > 0 && (
-            <span className="absolute top-2 right-2 w-4 h-4 bg-amber-400 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            <span className="absolute top-2 right-1 w-4 h-4 bg-amber-400 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {pendingParticipants.length}
             </span>
           )}
+        </button>
+        <button onClick={() => setTab('settings')} className={`flex-1 py-3 text-xs font-semibold whitespace-nowrap px-2 transition-colors ${tab === 'settings' ? 'text-purple-600 border-b-2 border-purple-500 bg-purple-50' : 'text-slate-400 hover:text-slate-600'}`}>
+          ⚙️ Settings
         </button>
       </div>
 
@@ -210,7 +238,7 @@ export default function OrganizerPage() {
               </div>
             ))}
           </div>
-        ) : (
+        ) : tab === 'requests' ? (
           <div className="flex flex-col gap-2">
             {pendingParticipants.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -245,7 +273,62 @@ export default function OrganizerPage() {
               </>
             )}
           </div>
-        )}
+        ) : tab === 'settings' ? (
+          <div className="flex flex-col gap-4 pb-6">
+            {/* Cover Photo */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              {event?.cover_photo && (
+                <img src={event.cover_photo} alt="Cover" className="w-full h-36 object-cover" />
+              )}
+              <div className="p-4">
+                <p className="text-slate-900 text-sm font-semibold mb-1">Cover Photo</p>
+                <p className="text-slate-400 text-xs mb-3">Shown at the top of the event page</p>
+                <label className="block w-full bg-slate-100 text-slate-700 py-2.5 rounded-xl font-semibold text-sm text-center cursor-pointer hover:bg-slate-200 transition-colors">
+                  📷 {event?.cover_photo ? 'Change Cover' : 'Upload Cover'}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleCoverPhoto} />
+                </label>
+              </div>
+            </div>
+
+            {/* Welcome Message */}
+            <div className="bg-white rounded-xl border border-slate-200 p-4">
+              <p className="text-slate-900 text-sm font-semibold mb-1">Welcome Message</p>
+              <p className="text-slate-400 text-xs mb-3">Shown to guests when they join</p>
+              <textarea
+                value={welcomeMsg}
+                onChange={e => setWelcomeMsg(e.target.value)}
+                placeholder="Welcome to our wedding! Capture every moment 📸"
+                rows={3}
+                className="w-full bg-slate-50 text-slate-900 rounded-xl px-4 py-3 text-sm outline-none border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 placeholder-slate-400 resize-none transition"
+              />
+            </div>
+
+            {/* Theme Colour */}
+            <div className="bg-white rounded-xl border border-slate-200 p-4">
+              <p className="text-slate-900 text-sm font-semibold mb-1">Theme Colour</p>
+              <p className="text-slate-400 text-xs mb-3">Accent colour used throughout the event</p>
+              <div className="flex items-center gap-3">
+                <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)}
+                  className="w-12 h-12 rounded-xl border border-slate-200 cursor-pointer p-1" />
+                <div className="flex gap-2 flex-wrap">
+                  {['#4f46e5','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'].map(c => (
+                    <button key={c} onClick={() => setThemeColor(c)}
+                      className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${themeColor === c ? 'border-slate-900 scale-110' : 'border-transparent'}`}
+                      style={{ backgroundColor: c }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSaveSettings}
+              disabled={savingSettings}
+              className="w-full bg-purple-600 text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-purple-700 disabled:opacity-50 transition-colors shadow-md"
+            >
+              {savingSettings ? 'Saving...' : '✅ Save Settings'}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {/* Bottom actions */}

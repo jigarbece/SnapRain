@@ -213,6 +213,20 @@ export default function EventPage() {
         </div>
       </div>
 
+      {/* Cover photo */}
+      {event?.cover_photo && (
+        <div className="w-full h-36 overflow-hidden">
+          <img src={event.cover_photo} alt="Event cover" className="w-full h-full object-cover" />
+        </div>
+      )}
+
+      {/* Welcome message */}
+      {event?.welcome_message && (
+        <div className="mx-3 mt-3 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">
+          <p className="text-indigo-700 text-xs font-medium">💬 {event.welcome_message}</p>
+        </div>
+      )}
+
       {/* Locked banner */}
       {event?.is_locked && (
         <div className="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center gap-2">
