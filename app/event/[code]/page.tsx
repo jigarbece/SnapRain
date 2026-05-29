@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase, Event, Photo } from '@/lib/supabase'
 import {
   getParticipant, getOrganizerKey, getAutoSave, setAutoSave as persistAutoSave,
-  downloadPhoto, downloadAllOneByOne, compressImage
+  downloadPhoto, downloadAllOneByOne, autoSavePhoto, compressImage
 } from '@/lib/utils'
 import Camera from '@/components/Camera'
 import PhotoCard from '@/components/PhotoCard'
@@ -67,7 +67,7 @@ export default function EventPage() {
           const newPhoto = payload.new as Photo
           setPhotos(prev => prev.find(p => p.id === newPhoto.id) ? prev : [newPhoto, ...prev])
           if (autoSaveRef.current && newPhoto.participant_id !== participant?.id) {
-            downloadPhoto(newPhoto.url, `snaprain_${Date.now()}.jpg`).catch(() => {})
+            autoSavePhoto(newPhoto.url).catch(() => {})
           }
         }
       )

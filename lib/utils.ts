@@ -34,9 +34,24 @@ export async function captureFromVideo(video: HTMLVideoElement): Promise<Blob> {
   return new Promise((resolve) => canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.92))
 }
 
-export async function downloadPhoto(url: string, filename: string) {
+// ─── Save a single photo to gallery (or fallback download) ────────────────────
+export async function savePhotoToGallery(url: string, filename: string): Promise<void> {
   const res = await fetch(url)
   const blob = await res.blob()
+  const file = new File([blob], filename, { type: 'image/jpeg' })
+
+  // Web Share API with files — on iOS shows "Save Image" option, on Android saves to gallery
+  if (
+    typeof navigator !== 'undefined' &&
+    navigator.share &&
+    navigator.canShare &&
+    navigator.canShare({ files: [file] })
+  ) {
+    await navigator.share({ files: [file], title: 'SnapRain Photo' })
+    return
+  }
+
+  // Fallback for desktop / unsupported browsers — regular download
   const blobUrl = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = blobUrl
@@ -47,31 +62,87 @@ export async function downloadPhoto(url: string, filename: string) {
   URL.revokeObjectURL(blobUrl)
 }
 
-// Download all photos one by one with a small delay between each
+// ─── Save all photos one by one ───────────────────────────────────────────────
 export async function downloadAllOneByOne(
   photos: { url: string; participant_name: string; created_at: string }[],
   onProgress?: (done: number, total: number) => void
 ) {
+  const canShare =
+    typeof navigator !== 'undefined' &&
+    !!navigator.share &&
+    !!navigator.canShare
+
   for (let i = 0; i < photos.length; i++) {
     const photo = photos[i]
+    const filename = `snaprain_${String(i + 1).padStart(3, '0')}_${photo.participant_name.replace(/\s+/g, '_')}.jpg`
     try {
       const res = await fetch(photo.url)
       const blob = await res.blob()
+
+      if (canShare) {
+        const file = new File([blob], filename, { type: 'image/jpeg' })
+        if (navigator.canShare({ files: [file] })) {
+          // On mobile: shows native share sheet → Save Image → Gallery
+          await navigator.share({ files: [file], title: 'SnapRain Photo' })
+          onProgress?.(i + 1, photos.length)
+          // Wait for user to dismiss share sheet before showing next
+          await new Promise(r => setTimeout(r, 800))
+          continue
+        }
+      }
+
+      // Desktop fallback: trigger download
       const blobUrl = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = blobUrl
-      a.download = `snaprain_${String(i + 1).padStart(3, '0')}_${photo.participant_name.replace(/\s+/g, '_')}.jpg`
+      a.download = filename
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(blobUrl)
       onProgress?.(i + 1, photos.length)
-      // Small delay so browser doesn't block multiple downloads
       await new Promise(r => setTimeout(r, 400))
-    } catch (_) {}
+    } catch (_) {
+      // User cancelled share sheet — still count as progress
+      onProgress?.(i + 1, photos.length)
+    }
   }
 }
 
+// ─── Auto-save a photo silently (for auto-save feature) ───────────────────────
+export async function autoSavePhoto(url: string): Promise<void> {
+  try {
+    const res = await fetch(url)
+    const blob = await res.blob()
+    const filename = `snaprain_autosave_${Date.now()}.jpg`
+    const file = new File([blob], filename, { type: 'image/jpeg' })
+
+    if (
+      typeof navigator !== 'undefined' &&
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({ files: [file] })
+    ) {
+      await navigator.share({ files: [file], title: 'New SnapRain Photo' })
+      return
+    }
+
+    // Desktop fallback
+    const blobUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(blobUrl)
+  } catch (_) {}
+}
+
+// Keep old name as alias for single photo download (used in PhotoCard)
+export const downloadPhoto = savePhotoToGallery
+
+// ─── localStorage helpers ─────────────────────────────────────────────────────
 export function getParticipant(code: string): { id: string; name: string } | null {
   try {
     const raw = localStorage.getItem(`ps_participant_${code}`)
