@@ -17,6 +17,8 @@ export type Event = {
   theme_color: string
   is_locked: boolean
   created_at: string
+  organizer_email: string | null
+  organizer_user_id: string | null
 }
 
 export type Photo = {
