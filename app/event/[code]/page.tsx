@@ -34,6 +34,7 @@ export default function EventPage() {
   const [approvedList, setApprovedList] = useState<{id: string; name: string}[]>([])
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const autoSaveRef = useRef(false)
   const savedPhotoIds = useRef<Set<string>>(new Set())
 
@@ -212,6 +213,14 @@ export default function EventPage() {
     showToast(val ? '✅ Auto-save ON' : 'Auto-save OFF')
   }
 
+  async function handleLeaveEvent() {
+    if (!participant) return
+    // Remove participant from DB
+    await supabase.from('participants').delete().eq('id', participant.id)
+    clearParticipant(code)
+    router.push('/')
+  }
+
   function handleShare() {
     if (typeof navigator !== 'undefined' && navigator.share) {
       navigator.share({ title: event?.title, text: `Join my photo album! Code: ${code}`, url: `${window.location.origin}/join/${code}` })
@@ -242,13 +251,15 @@ export default function EventPage() {
       )}
 
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-slate-200 z-30 px-4 py-3 shadow-sm">
-        <div className="flex items-center justify-between">
+      <div className="sticky top-0 bg-white border-b border-slate-200 z-30 shadow-sm">
+        {/* Branding bar */}
+        <div className="flex items-center justify-center gap-2 pt-3 pb-2 border-b border-slate-100">
+          <img src="/logo.png" alt="SnapRain" className="w-7 h-7 rounded-xl object-cover shadow-md shadow-indigo-200" />
+          <span className="text-indigo-600 text-sm font-black tracking-wide">snap<span className="text-slate-800">Rain</span></span>
+        </div>
+        {/* Event row */}
+        <div className="flex items-center justify-between px-4 py-2.5">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 mb-0.5">
-              <img src="/logo.png" alt="SnapRain" className="w-5 h-5 rounded-md object-cover shadow-sm" />
-              <span className="text-indigo-600 text-xs font-black tracking-wide">snap<span className="text-slate-700">Rain</span></span>
-            </div>
             <h1 className="text-slate-900 font-bold text-base truncate">{event?.title}</h1>
             <p className="text-slate-400 text-xs">{participantCount} people · {photos.length} photos</p>
           </div>
@@ -481,13 +492,47 @@ export default function EventPage() {
             </div>
 
             {event?.expires_at && (
-              <div className="py-4">
+              <div className="py-4 border-b border-slate-100">
                 <p className="text-slate-400 text-xs mb-1">Event expires</p>
                 <p className="text-slate-900 text-sm">{new Date(event.expires_at).toLocaleString()}</p>
               </div>
             )}
 
             <button onClick={() => setShowSettings(false)} className="w-full mt-4 bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors">Done</button>
+
+            {!isOrganizer && (
+              <button
+                onClick={() => { setShowSettings(false); setShowLeaveConfirm(true) }}
+                className="w-full mt-3 bg-red-50 text-red-500 py-3.5 rounded-xl font-semibold text-sm hover:bg-red-100 transition-colors border border-red-100"
+              >
+                🚪 Leave Event
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Leave Event Confirm */}
+      {showLeaveConfirm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="text-4xl text-center mb-3">🚪</div>
+            <h3 className="text-slate-900 font-bold text-lg text-center mb-2">Leave Event?</h3>
+            <p className="text-slate-500 text-sm text-center mb-6">You&apos;ll be removed from <span className="font-semibold text-slate-700">{event?.title}</span>. You can rejoin using the event code if the organizer approves you again.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLeaveConfirm(false)}
+                className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors"
+              >
+                Stay
+              </button>
+              <button
+                onClick={handleLeaveEvent}
+                className="flex-1 bg-red-500 text-white py-3 rounded-xl font-semibold text-sm hover:bg-red-600 transition-colors"
+              >
+                Yes, Leave
+              </button>
+            </div>
           </div>
         </div>
       )}
