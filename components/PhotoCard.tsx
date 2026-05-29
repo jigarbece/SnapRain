@@ -13,7 +13,7 @@ export default function PhotoCard({ photo, canDelete, onDelete }: PhotoCardProps
   const [open, setOpen] = useState(false)
   const [downloading, setDownloading] = useState(false)
 
-  const filename = `partysnap_${photo.participant_name.replace(/\s+/g, '_')}_${Date.now()}.jpg`
+  const filename = `snaprain_${photo.participant_name.replace(/\s+/g, '_')}_${Date.now()}.jpg`
 
   async function handleDownload(e: React.MouseEvent) {
     e.stopPropagation()

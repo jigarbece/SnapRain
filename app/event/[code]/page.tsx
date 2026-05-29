@@ -66,7 +66,7 @@ export default function EventPage() {
           const newPhoto = payload.new as Photo
           setPhotos(prev => prev.find(p => p.id === newPhoto.id) ? prev : [newPhoto, ...prev])
           if (autoSaveRef.current && newPhoto.participant_id !== participant?.id) {
-            downloadPhoto(newPhoto.url, `partysnap_${Date.now()}.jpg`).catch(() => {})
+            downloadPhoto(newPhoto.url, `snaprain_${Date.now()}.jpg`).catch(() => {})
           }
         }
       )

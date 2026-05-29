@@ -5,13 +5,13 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'PartySnap — Shared Event Photos',
-  description: 'Take photos together. See them instantly. Download everything.',
+  title: 'SnapRain — Shared Event Photos',
+  description: 'Take photos together. They rain down to everyone instantly.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'PartySnap',
+    title: 'SnapRain',
   },
 }
 

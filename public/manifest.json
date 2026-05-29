@@ -1,7 +1,7 @@
 {
-  "name": "PartySnap",
-  "short_name": "PartySnap",
-  "description": "Shared event photos — take, share, download together",
+  "name": "SnapRain",
+  "short_name": "SnapRain",
+  "description": "Take photos at events — they rain down to everyone instantly",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",

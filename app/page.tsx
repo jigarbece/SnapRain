@@ -94,9 +94,9 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4">
       <div className="text-center mb-8">
-        <div className="text-5xl mb-3">📸</div>
-        <h1 className="text-3xl font-bold text-white">PartySnap</h1>
-        <p className="text-zinc-400 mt-2 text-sm">Shared photos for every moment</p>
+        <div className="text-5xl mb-3">🌧️</div>
+        <h1 className="text-3xl font-bold text-white">SnapRain</h1>
+        <p className="text-zinc-400 mt-2 text-sm">Photos rain down to everyone, instantly</p>
       </div>
 
       <div className="w-full max-w-sm bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800">
@@ -198,7 +198,7 @@ export default function HomePage() {
       </div>
 
       <p className="text-zinc-600 text-xs mt-6 text-center max-w-xs">
-        No account needed · Photos shared instantly · Auto-save to your gallery
+        No account needed · Photos rain to everyone · Auto-save to your gallery
       </p>
     </div>
   )
