@@ -156,8 +156,10 @@ export default function EventPage() {
   async function handleDelete(photoId: string) {
     const photo = photos.find(p => p.id === photoId)
     if (!photo) return
+    setPhotos(prev => prev.filter(p => p.id !== photoId))  // update UI immediately
     await supabase.storage.from('photos').remove([photo.storage_path])
     await supabase.from('photos').delete().eq('id', photoId)
+    showToast('Photo deleted')
   }
 
   async function handleDownloadAll() {

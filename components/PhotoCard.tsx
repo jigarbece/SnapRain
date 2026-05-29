@@ -72,59 +72,44 @@ export default function PhotoCard({ photo, canDelete, onDelete, selectable, sele
 
       {/* Full screen modal */}
       {open && (
-        <div
-          className="fixed inset-0 bg-black/90 z-50 flex flex-col"
-          onClick={() => setOpen(false)}
-        >
-          <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm" onClick={e => e.stopPropagation()}>
-            <div>
-              <p className="text-white font-semibold text-sm">{photo.participant_name}</p>
-              <p className="text-white/50 text-xs">{new Date(photo.created_at).toLocaleString()}</p>
-              {photo.caption && <p className="text-white/80 text-xs mt-1 italic">"{photo.caption}"</p>}
+        <div className="fixed inset-0 bg-black/90 z-50 flex flex-col" onClick={() => setOpen(false)}>
+
+          {/* Image/Video */}
+          <div className="flex-1 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
+            {photo.media_type === 'video' ? (
+              <video src={photo.url} controls autoPlay playsInline className="max-w-full max-h-full rounded-2xl" onClick={e => e.stopPropagation()} />
+            ) : (
+              <img src={photo.url} alt={`by ${photo.participant_name}`} className="max-w-full max-h-full object-contain rounded-2xl" onClick={e => e.stopPropagation()} />
+            )}
+          </div>
+
+          {/* Bottom action sheet */}
+          <div className="bg-zinc-900 rounded-t-3xl p-5 border-t border-zinc-800" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-white font-semibold text-sm">{photo.participant_name}</p>
+                <p className="text-zinc-400 text-xs mt-0.5">{new Date(photo.created_at).toLocaleString()}</p>
+                {photo.caption && <p className="text-zinc-300 text-xs mt-1 italic">"{photo.caption}"</p>}
+              </div>
+              <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-full bg-zinc-700 text-white flex items-center justify-center text-sm">✕</button>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex gap-3">
               <button
                 onClick={handleDownload}
                 disabled={downloading}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1 shadow-md"
+                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 disabled:opacity-50 transition-colors"
               >
                 {downloading ? '...' : '⬇ Save'}
               </button>
               {canDelete && onDelete && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); onDelete(photo.id) }}
-                  className="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-red-600"
+                  onClick={(e) => { e.stopPropagation(); setOpen(false); onDelete(photo.id) }}
+                  className="flex-1 bg-red-500 text-white py-3 rounded-xl font-semibold text-sm hover:bg-red-600 transition-colors"
                 >
-                  Delete
+                  🗑 Delete
                 </button>
               )}
-              <button
-                onClick={() => setOpen(false)}
-                className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"
-              >
-                ✕
-              </button>
             </div>
-          </div>
-
-          <div className="flex-1 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
-            {photo.media_type === 'video' ? (
-              <video
-                src={photo.url}
-                controls
-                autoPlay
-                playsInline
-                className="max-w-full max-h-full rounded-xl"
-                onClick={e => e.stopPropagation()}
-              />
-            ) : (
-              <img
-                src={photo.url}
-                alt={`by ${photo.participant_name}`}
-                className="max-w-full max-h-full object-contain rounded-xl"
-                onClick={e => e.stopPropagation()}
-              />
-            )}
           </div>
         </div>
       )}
