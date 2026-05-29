@@ -116,10 +116,14 @@ export default function EventPage() {
 
   async function handleDownloadAll() {
     if (photos.length === 0) return
+    const unsaved = photos.filter(p => !savedPhotoIds.current.has(p.id))
+    if (unsaved.length === 0) { showToast('✅ All photos already saved!'); return }
     setDownloadingAll(true)
-    setDownloadProgress({ done: 0, total: photos.length })
-    showToast(`Downloading ${photos.length} photos...`)
-    await downloadAllOneByOne(photos, (done, total) => {
+    setDownloadProgress({ done: 0, total: unsaved.length })
+    showToast(`Downloading ${unsaved.length} photos...`)
+    await downloadAllOneByOne(unsaved, (done, total) => {
+      const photo = unsaved[done - 1]
+      if (photo) savedPhotoIds.current.add(photo.id)
       setDownloadProgress({ done, total })
     })
     setDownloadingAll(false)
