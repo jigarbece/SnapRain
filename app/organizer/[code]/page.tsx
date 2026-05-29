@@ -133,6 +133,17 @@ export default function OrganizerPage() {
     return acc
   }, {})
 
+  // Stats
+  const topContributor = Object.entries(photoCounts).sort((a, b) => b[1] - a[1])[0]
+  const peakHour = (() => {
+    const hours: Record<number, number> = {}
+    photos.forEach(p => { const h = new Date(p.created_at).getHours(); hours[h] = (hours[h] || 0) + 1 })
+    const peak = Object.entries(hours).sort((a, b) => b[1] - a[1])[0]
+    if (!peak) return 'N/A'
+    const h = parseInt(peak[0]); const ampm = h >= 12 ? 'PM' : 'AM'; const h12 = h % 12 || 12
+    return `${h12}:00 ${ampm}`
+  })()
+
   if (loading) return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
@@ -275,6 +286,27 @@ export default function OrganizerPage() {
           </div>
         ) : tab === 'settings' ? (
           <div className="flex flex-col gap-4 pb-6">
+
+            {/* Stats */}
+            <div className="bg-white rounded-xl border border-slate-200 p-4">
+              <p className="text-slate-900 text-sm font-bold mb-3">📊 Event Stats</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Total Photos', value: photos.length },
+                  { label: 'Total Guests', value: approvedParticipants.length },
+                  { label: 'Top Contributor', value: topContributor ? `${topContributor[0]} (${topContributor[1]})` : 'N/A' },
+                  { label: 'Peak Hour', value: peakHour },
+                  { label: 'Avg per Guest', value: approvedParticipants.length ? (photos.length / approvedParticipants.length).toFixed(1) : '0' },
+                  { label: 'Status', value: event?.is_locked ? '🔒 Locked' : '🟢 Active' },
+                ].map(s => (
+                  <div key={s.label} className="bg-slate-50 rounded-xl p-3">
+                    <p className="text-indigo-600 font-bold text-sm truncate">{s.value}</p>
+                    <p className="text-slate-400 text-xs mt-0.5">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Cover Photo */}
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
               {event?.cover_photo && (
