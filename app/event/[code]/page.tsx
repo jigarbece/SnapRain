@@ -30,6 +30,8 @@ export default function EventPage() {
   const [pendingBlob, setPendingBlob] = useState<Blob | null>(null)
   const [filteredBlob, setFilteredBlob] = useState<Blob | null>(null)
   const [caption, setCaption] = useState('')
+  const [showPeople, setShowPeople] = useState(false)
+  const [approvedList, setApprovedList] = useState<{id: string; name: string}[]>([])
   const autoSaveRef = useRef(false)
   const savedPhotoIds = useRef<Set<string>>(new Set())
 
@@ -51,9 +53,10 @@ export default function EventPage() {
         .from('photos').select().eq('event_id', ev.id).order('created_at', { ascending: false })
       setPhotos(ph || [])
 
-      const { count } = await supabase
-        .from('participants').select('id', { count: 'exact', head: true }).eq('event_id', ev.id)
+      const { data: parts, count } = await supabase
+        .from('participants').select('id, name', { count: 'exact' }).eq('event_id', ev.id).eq('status', 'approved')
       setParticipantCount(count || 0)
+      setApprovedList(parts || [])
 
       // Check approval status (organizer is always approved)
       const orgKey = getOrganizerKey(code)
@@ -221,6 +224,7 @@ export default function EventPage() {
             <p className="text-slate-400 text-xs">{participantCount} people · {photos.length} photos</p>
           </div>
           <div className="flex gap-2 ml-3 shrink-0">
+            <button onClick={() => setShowPeople(true)} className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-base hover:bg-slate-200 transition-colors" title="People">👥</button>
             <button onClick={() => setShowShare(true)} className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-base hover:bg-slate-200 transition-colors" title="Share">🔗</button>
             <button onClick={() => setShowSettings(true)} className={`w-9 h-9 rounded-full flex items-center justify-center text-base transition-colors ${autoSave ? 'bg-green-100' : 'bg-slate-100 hover:bg-slate-200'}`} title="Settings">⚙️</button>
             {isOrganizer && (
@@ -312,6 +316,38 @@ export default function EventPage() {
 
       {/* Camera */}
       {showCamera && <Camera onCapture={handleCapturedPhoto} onClose={() => setShowCamera(false)} uploading={uploading} />}
+
+      {/* People / Leaderboard Sheet */}
+      {showPeople && (
+        <div className="fixed inset-0 bg-black/40 z-40 flex items-end" onClick={() => setShowPeople(false)}>
+          <div className="w-full bg-white rounded-t-3xl p-6 border-t border-slate-200 shadow-2xl max-h-[75vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto mb-5" />
+            <h2 className="text-slate-900 font-bold text-xl mb-1">Who&apos;s Here</h2>
+            <p className="text-slate-400 text-xs mb-4">{approvedList.length} people · leaderboard by photos</p>
+            <div className="overflow-y-auto flex flex-col gap-2">
+              {approvedList
+                .map(p => ({ ...p, count: photos.filter(ph => ph.participant_name === p.name).length }))
+                .sort((a, b) => b.count - a.count)
+                .map((p, i) => (
+                  <div key={p.id} className="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3">
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0
+                      ${i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-slate-300 text-white' : i === 2 ? 'bg-orange-300 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                      {i + 1}
+                    </span>
+                    <p className="flex-1 text-slate-900 text-sm font-medium">
+                      {p.name} {p.id === participant?.id ? '(you)' : ''}
+                    </p>
+                    <div className="text-right">
+                      <p className="text-indigo-600 font-bold text-sm">{p.count}</p>
+                      <p className="text-slate-400 text-xs">photos</p>
+                    </div>
+                  </div>
+                ))}
+            </div>
+            <button onClick={() => setShowPeople(false)} className="mt-4 w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors shrink-0">Done</button>
+          </div>
+        </div>
+      )}
 
       {/* Filter picker */}
       {pendingBlob && (
