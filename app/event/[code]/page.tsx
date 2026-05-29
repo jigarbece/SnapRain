@@ -26,6 +26,7 @@ export default function EventPage() {
   const [downloadProgress, setDownloadProgress] = useState({ done: 0, total: 0 })
   const [toast, setToast] = useState('')
   const autoSaveRef = useRef(false)
+  const savedPhotoIds = useRef<Set<string>>(new Set())
 
   const participant = getParticipant(code)
   const isOrganizer = !!getOrganizerKey(code)
@@ -66,7 +67,8 @@ export default function EventPage() {
         (payload) => {
           const newPhoto = payload.new as Photo
           setPhotos(prev => prev.find(p => p.id === newPhoto.id) ? prev : [newPhoto, ...prev])
-          if (autoSaveRef.current && newPhoto.participant_id !== participant?.id) {
+          if (autoSaveRef.current && newPhoto.participant_id !== participant?.id && !savedPhotoIds.current.has(newPhoto.id)) {
+            savedPhotoIds.current.add(newPhoto.id)
             autoSavePhoto(newPhoto.url).catch(() => {})
           }
         }
@@ -94,6 +96,8 @@ export default function EventPage() {
       }).select().single()
       if (dbErr) throw dbErr
       setPhotos(prev => [rec, ...prev])
+      savedPhotoIds.current.add(rec.id)  // mark as already saved — skip in auto-save
+      autoSavePhoto(urlData.publicUrl).catch(() => {})  // save own photo to gallery
       showToast('📸 Photo shared!')
     } catch (err) {
       showToast('Upload failed. Try again.')
