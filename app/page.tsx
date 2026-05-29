@@ -1,65 +1,205 @@
-import Image from "next/image";
+'use client'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { generateCode, saveParticipant, saveOrganizerKey } from '@/lib/utils'
 
-export default function Home() {
+export default function HomePage() {
+  const router = useRouter()
+  const [tab, setTab] = useState<'create' | 'join'>('create')
+
+  const [eventTitle, setEventTitle] = useState('')
+  const [organizerName, setOrganizerName] = useState('')
+  const [expiryHours, setExpiryHours] = useState('24')
+  const [creating, setCreating] = useState(false)
+
+  const [joinCode, setJoinCode] = useState('')
+  const [joinName, setJoinName] = useState('')
+  const [joining, setJoining] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    if (!eventTitle.trim() || !organizerName.trim()) return
+    setCreating(true)
+    setError('')
+    try {
+      const code = generateCode()
+      const organizerKey = generateCode(12)
+      const expiresAt = expiryHours !== 'never'
+        ? new Date(Date.now() + parseInt(expiryHours) * 3600 * 1000).toISOString()
+        : null
+
+      const { data: event, error: eventErr } = await supabase
+        .from('events')
+        .insert({ title: eventTitle.trim(), code, organizer_name: organizerName.trim(), organizer_key: organizerKey, expires_at: expiresAt })
+        .select()
+        .single()
+
+      if (eventErr) throw eventErr
+
+      const { data: participant, error: partErr } = await supabase
+        .from('participants')
+        .insert({ event_id: event.id, name: organizerName.trim() })
+        .select()
+        .single()
+
+      if (partErr) throw partErr
+
+      saveParticipant(code, { id: participant.id, name: organizerName.trim() })
+      saveOrganizerKey(code, organizerKey)
+      router.push(`/event/${code}`)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  async function handleJoin(e: React.FormEvent) {
+    e.preventDefault()
+    const code = joinCode.trim().toUpperCase()
+    if (!code || !joinName.trim()) return
+    setJoining(true)
+    setError('')
+    try {
+      const { data: event, error: eventErr } = await supabase
+        .from('events')
+        .select()
+        .eq('code', code)
+        .single()
+
+      if (eventErr || !event) throw new Error('Event not found. Check the code.')
+      if (event.expires_at && new Date(event.expires_at) < new Date()) {
+        throw new Error('This event has expired.')
+      }
+
+      const { data: participant, error: partErr } = await supabase
+        .from('participants')
+        .insert({ event_id: event.id, name: joinName.trim() })
+        .select()
+        .single()
+
+      if (partErr) throw partErr
+
+      saveParticipant(code, { id: participant.id, name: joinName.trim() })
+      router.push(`/event/${code}`)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setJoining(false)
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4">
+      <div className="text-center mb-8">
+        <div className="text-5xl mb-3">📸</div>
+        <h1 className="text-3xl font-bold text-white">PartySnap</h1>
+        <p className="text-zinc-400 mt-2 text-sm">Shared photos for every moment</p>
+      </div>
+
+      <div className="w-full max-w-sm bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800">
+        <div className="flex">
+          <button
+            onClick={() => { setTab('create'); setError('') }}
+            className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'create' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}`}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Create Event
+          </button>
+          <button
+            onClick={() => { setTab('join'); setError('') }}
+            className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'join' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}`}
           >
-            Documentation
-          </a>
+            Join Event
+          </button>
         </div>
-      </main>
+
+        <div className="p-5">
+          {tab === 'create' ? (
+            <form onSubmit={handleCreate} className="flex flex-col gap-4">
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">Event Name</label>
+                <input
+                  className="w-full bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-white/20 placeholder-zinc-500"
+                  placeholder="John's Birthday Party"
+                  value={eventTitle}
+                  onChange={e => setEventTitle(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">Your Name</label>
+                <input
+                  className="w-full bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-white/20 placeholder-zinc-500"
+                  placeholder="Alex"
+                  value={organizerName}
+                  onChange={e => setOrganizerName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">Event Expires</label>
+                <select
+                  className="w-full bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-white/20"
+                  value={expiryHours}
+                  onChange={e => setExpiryHours(e.target.value)}
+                >
+                  <option value="6">In 6 hours</option>
+                  <option value="24">In 24 hours</option>
+                  <option value="48">In 2 days</option>
+                  <option value="168">In 7 days</option>
+                  <option value="never">Never</option>
+                </select>
+              </div>
+              {error && <p className="text-red-400 text-xs">{error}</p>}
+              <button
+                type="submit"
+                disabled={creating}
+                className="w-full bg-white text-black font-semibold rounded-xl py-3 text-sm hover:bg-zinc-200 disabled:opacity-50 transition-colors"
+              >
+                {creating ? 'Creating...' : 'Create Event ✨'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleJoin} className="flex flex-col gap-4">
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">Event Code</label>
+                <input
+                  className="w-full bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-white/20 placeholder-zinc-500 uppercase tracking-widest text-center font-mono text-xl"
+                  placeholder="ABC123"
+                  value={joinCode}
+                  onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
+                  maxLength={6}
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">Your Name</label>
+                <input
+                  className="w-full bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-white/20 placeholder-zinc-500"
+                  placeholder="Sarah"
+                  value={joinName}
+                  onChange={e => setJoinName(e.target.value)}
+                  required
+                />
+              </div>
+              {error && <p className="text-red-400 text-xs">{error}</p>}
+              <button
+                type="submit"
+                disabled={joining}
+                className="w-full bg-white text-black font-semibold rounded-xl py-3 text-sm hover:bg-zinc-200 disabled:opacity-50 transition-colors"
+              >
+                {joining ? 'Joining...' : 'Join Event 🎉'}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+
+      <p className="text-zinc-600 text-xs mt-6 text-center max-w-xs">
+        No account needed · Photos shared instantly · Auto-save to your gallery
+      </p>
     </div>
-  );
+  )
 }
