@@ -98,6 +98,7 @@ export default function EventPage() {
 
   const handleCapturedPhoto = useCallback(async (blob: Blob) => {
     if (!event || !participant) return
+    setShowCamera(false)
     setUploading(true)
     try {
       const compressed = await compressImage(blob)
