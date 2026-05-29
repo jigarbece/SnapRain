@@ -2,7 +2,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 let _client: SupabaseClient | null = null
 
-export function getSupabase() {
+export function getSupabase(): SupabaseClient {
   if (!_client) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -11,10 +11,18 @@ export function getSupabase() {
   return _client
 }
 
-// Convenience proxy — lazily initialized so module import doesn't throw during build
+// Proxy that lazily initialises the client but correctly binds `this`
+// so chained calls like supabase.from('x').select().eq() work fine.
 export const supabase = new Proxy({} as SupabaseClient, {
   get(_target, prop) {
-    return (getSupabase() as never)[prop]
+    const client = getSupabase()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const value = (client as any)[prop]
+    if (typeof value === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (value as any).bind(client)
+    }
+    return value
   },
 })
 
