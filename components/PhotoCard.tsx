@@ -33,12 +33,18 @@ export default function PhotoCard({ photo, canDelete, onDelete, selectable, sele
         className={`relative group cursor-pointer overflow-hidden rounded-xl bg-slate-100 aspect-square transition-all ${selected ? 'ring-2 ring-indigo-500 scale-95' : ''}`}
         onClick={() => selectable ? onSelect?.(photo.id) : setOpen(true)}
       >
-        <img
-          src={photo.url}
-          alt={`by ${photo.participant_name}`}
-          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-          loading="lazy"
-        />
+        {photo.media_type === 'video' ? (
+          <video src={photo.url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+        ) : (
+          <img src={photo.url} alt={`by ${photo.participant_name}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+        )}
+        {photo.media_type === 'video' && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-10 h-10 bg-black/50 rounded-full flex items-center justify-center">
+              <span className="text-white text-lg ml-0.5">▶</span>
+            </div>
+          </div>
+        )}
         {/* Selection overlay */}
         {selectable && (
           <div className={`absolute inset-0 transition-colors ${selected ? 'bg-indigo-500/20' : ''} flex items-start justify-end p-2`}>
@@ -102,12 +108,23 @@ export default function PhotoCard({ photo, canDelete, onDelete, selectable, sele
           </div>
 
           <div className="flex-1 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
-            <img
-              src={photo.url}
-              alt={`by ${photo.participant_name}`}
-              className="max-w-full max-h-full object-contain rounded-xl"
-              onClick={e => e.stopPropagation()}
-            />
+            {photo.media_type === 'video' ? (
+              <video
+                src={photo.url}
+                controls
+                autoPlay
+                playsInline
+                className="max-w-full max-h-full rounded-xl"
+                onClick={e => e.stopPropagation()}
+              />
+            ) : (
+              <img
+                src={photo.url}
+                alt={`by ${photo.participant_name}`}
+                className="max-w-full max-h-full object-contain rounded-xl"
+                onClick={e => e.stopPropagation()}
+              />
+            )}
           </div>
         </div>
       )}

@@ -26,7 +26,7 @@ export default function Camera({ onCapture, onClose, uploading }: CameraProps) {
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         capture="environment"
         className="hidden"
         onChange={handleChange}

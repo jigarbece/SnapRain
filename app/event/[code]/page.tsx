@@ -108,7 +108,11 @@ export default function EventPage() {
   const handleCapturedPhoto = useCallback(async (blob: Blob) => {
     if (!event || !participant) return
     setShowCamera(false)
-    setPendingBlob(blob)  // show filter picker
+    if (blob.type.startsWith('video/')) {
+      setFilteredBlob(blob)  // skip filters for video, go straight to caption
+    } else {
+      setPendingBlob(blob)   // show filter picker for photos
+    }
     setCaption('')
   }, [event, participant])
 
@@ -119,23 +123,27 @@ export default function EventPage() {
 
   async function handleUploadWithCaption() {
     if (!filteredBlob || !event || !participant) return
+    const isVideo = filteredBlob.type.startsWith('video/')
     setUploading(true)
     setFilteredBlob(null)
     try {
-      const compressed = await compressImage(filteredBlob)
-      const fileName = `${event.id}/${participant.id}_${Date.now()}.jpg`
-      const { error: upErr } = await supabase.storage.from('photos').upload(fileName, compressed, { contentType: 'image/jpeg' })
+      const ext = isVideo ? 'mp4' : 'jpg'
+      const contentType = isVideo ? filteredBlob.type : 'image/jpeg'
+      const fileData = isVideo ? filteredBlob : await compressImage(filteredBlob)
+      const fileName = `${event.id}/${participant.id}_${Date.now()}.${ext}`
+      const { error: upErr } = await supabase.storage.from('photos').upload(fileName, fileData, { contentType })
       if (upErr) throw upErr
       const { data: urlData } = supabase.storage.from('photos').getPublicUrl(fileName)
       const { data: rec, error: dbErr } = await supabase.from('photos').insert({
         event_id: event.id, participant_id: participant.id, participant_name: participant.name,
         storage_path: fileName, url: urlData.publicUrl, caption: caption.trim() || null,
+        media_type: isVideo ? 'video' : 'photo',
       }).select().single()
       if (dbErr) throw dbErr
       setPhotos(prev => [rec, ...prev])
       savedPhotoIds.current.add(rec.id)
-      autoSavePhoto(urlData.publicUrl).catch(() => {})
-      showToast('📸 Photo shared!')
+      if (!isVideo) autoSavePhoto(urlData.publicUrl).catch(() => {})
+      showToast(isVideo ? '🎥 Video shared!' : '📸 Photo shared!')
     } catch (err) {
       showToast('Upload failed. Try again.')
       console.error(err)
