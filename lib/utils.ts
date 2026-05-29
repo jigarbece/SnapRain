@@ -62,50 +62,56 @@ export async function savePhotoToGallery(url: string, filename: string): Promise
   URL.revokeObjectURL(blobUrl)
 }
 
-// ─── Save all photos one by one ───────────────────────────────────────────────
+// ─── Save all photos — single batch share sheet (one tap saves all) ──────────
 export async function downloadAllOneByOne(
   photos: { url: string; participant_name: string; created_at: string }[],
   onProgress?: (done: number, total: number) => void
 ) {
+  if (photos.length === 0) return
+
   const canShare =
     typeof navigator !== 'undefined' &&
     !!navigator.share &&
     !!navigator.canShare
 
+  // Fetch all photos first, showing progress
+  const files: File[] = []
   for (let i = 0; i < photos.length; i++) {
     const photo = photos[i]
     const filename = `snaprain_${String(i + 1).padStart(3, '0')}_${photo.participant_name.replace(/\s+/g, '_')}.jpg`
     try {
       const res = await fetch(photo.url)
       const blob = await res.blob()
-
-      if (canShare) {
-        const file = new File([blob], filename, { type: 'image/jpeg' })
-        if (navigator.canShare({ files: [file] })) {
-          // On mobile: shows native share sheet → Save Image → Gallery
-          await navigator.share({ files: [file], title: 'SnapRain Photo' })
-          onProgress?.(i + 1, photos.length)
-          // Wait for user to dismiss share sheet before showing next
-          await new Promise(r => setTimeout(r, 800))
-          continue
-        }
-      }
-
-      // Desktop fallback: trigger download
-      const blobUrl = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = blobUrl
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(blobUrl)
+      files.push(new File([blob], filename, { type: 'image/jpeg' }))
       onProgress?.(i + 1, photos.length)
-      await new Promise(r => setTimeout(r, 400))
     } catch (_) {
-      // User cancelled share sheet — still count as progress
       onProgress?.(i + 1, photos.length)
     }
+  }
+
+  if (files.length === 0) return
+
+  // Try batch share — one share sheet for all photos
+  if (canShare && navigator.canShare({ files })) {
+    try {
+      await navigator.share({ files, title: `SnapRain — ${files.length} Photos` })
+      return
+    } catch (_) {
+      // User cancelled or share failed — fall through to download
+    }
+  }
+
+  // Desktop fallback: trigger individual downloads
+  for (const file of files) {
+    const blobUrl = URL.createObjectURL(file)
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = file.name
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(blobUrl)
+    await new Promise(r => setTimeout(r, 300))
   }
 }
 

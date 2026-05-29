@@ -133,18 +133,31 @@ export default function EventPage() {
   async function handleDownloadAll() {
     if (photos.length === 0) return
     const unsaved = photos.filter(p => !savedPhotoIds.current.has(p.id))
-    if (unsaved.length === 0) { showToast('✅ All photos already saved!'); return }
+    const alreadySaved = photos.length - unsaved.length
+
+    if (unsaved.length === 0) {
+      showToast(`✅ All ${photos.length} photos already saved!`)
+      return
+    }
+
+    if (alreadySaved > 0) {
+      showToast(`Skipping ${alreadySaved} already saved · Fetching ${unsaved.length} new...`)
+    } else {
+      showToast(`Fetching ${unsaved.length} photo${unsaved.length > 1 ? 's' : ''}...`)
+    }
+
     setDownloadingAll(true)
     setDownloadProgress({ done: 0, total: unsaved.length })
-    showToast(`Downloading ${unsaved.length} new photo${unsaved.length > 1 ? 's' : ''}...`)
+
     await downloadAllOneByOne(unsaved, (done, total) => {
       const photo = unsaved[done - 1]
       if (photo) savedPhotoIds.current.add(photo.id)
       setDownloadProgress({ done, total })
     })
+
     setDownloadingAll(false)
     setDownloadProgress({ done: 0, total: 0 })
-    showToast('✅ All photos saved!')
+    showToast('✅ Done! Tap "Save X Images" to save to Camera Roll')
   }
 
   function toggleAutoSave(val: boolean) {
