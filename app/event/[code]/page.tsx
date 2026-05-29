@@ -213,6 +213,14 @@ export default function EventPage() {
         </div>
       </div>
 
+      {/* Locked banner */}
+      {event?.is_locked && (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center gap-2">
+          <span>🔒</span>
+          <p className="text-red-600 text-xs font-semibold">This event is locked — no new photos can be added</p>
+        </div>
+      )}
+
       {/* Photos Grid */}
       <div className="flex-1 p-3">
         {photos.length === 0 ? (
@@ -252,10 +260,10 @@ export default function EventPage() {
 
           {/* Camera */}
           <button
-            onClick={() => setShowCamera(true)}
-            className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center shadow-xl shadow-indigo-300 active:scale-95 transition-transform hover:bg-indigo-700"
+            onClick={() => event?.is_locked ? showToast('🔒 Event is locked — no new photos') : setShowCamera(true)}
+            className={`w-16 h-16 rounded-full flex items-center justify-center shadow-xl active:scale-95 transition-transform ${event?.is_locked ? 'bg-slate-300 shadow-slate-200' : 'bg-indigo-600 shadow-indigo-300 hover:bg-indigo-700'}`}
           >
-            <span className="text-2xl">📸</span>
+            <span className="text-2xl">{event?.is_locked ? '🔒' : '📸'}</span>
           </button>
 
           {/* Auto-save */}

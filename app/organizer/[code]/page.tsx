@@ -63,6 +63,14 @@ export default function OrganizerPage() {
     return () => { supabase.removeChannel(channel) }
   }, [event])
 
+  async function handleToggleLock() {
+    if (!event) return
+    const newLocked = !event.is_locked
+    await supabase.from('events').update({ is_locked: newLocked }).eq('id', event.id)
+    setEvent(prev => prev ? { ...prev, is_locked: newLocked } : prev)
+    showToast(newLocked ? '🔒 Event locked — no new photos' : '🔓 Event unlocked')
+  }
+
   async function handleApprove(participantId: string) {
     await supabase.from('participants').update({ status: 'approved' }).eq('id', participantId)
     setParticipants(prev => prev.map(p => p.id === participantId ? { ...p, status: 'approved' as const } : p))
@@ -255,6 +263,13 @@ export default function OrganizerPage() {
             className="bg-slate-100 text-slate-700 px-4 py-3 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors"
           >
             🔗
+          </button>
+          <button
+            onClick={handleToggleLock}
+            className={`px-4 py-3 rounded-xl font-semibold text-sm transition-colors ${event?.is_locked ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+            title={event?.is_locked ? 'Unlock event' : 'Lock event'}
+          >
+            {event?.is_locked ? '🔒' : '🔓'}
           </button>
         </div>
       </div>
