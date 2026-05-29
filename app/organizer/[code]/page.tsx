@@ -19,6 +19,8 @@ export default function OrganizerPage() {
   const [welcomeMsg, setWelcomeMsg] = useState('')
   const [themeColor, setThemeColor] = useState('#4f46e5')
   const [savingSettings, setSavingSettings] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   function showToast(msg: string) {
     setToast(msg)
@@ -70,28 +72,45 @@ export default function OrganizerPage() {
   async function handleSaveSettings() {
     if (!event) return
     setSavingSettings(true)
-    await supabase.from('events').update({ welcome_message: welcomeMsg, theme_color: themeColor }).eq('id', event.id)
-    setEvent(prev => prev ? { ...prev, welcome_message: welcomeMsg, theme_color: themeColor } : prev)
+    const { error } = await supabase.from('events').update({ welcome_message: welcomeMsg, theme_color: themeColor }).eq('id', event.id)
     setSavingSettings(false)
+    if (error) { showToast(`Error: ${error.message}`); console.error(error); return }
+    setEvent(prev => prev ? { ...prev, welcome_message: welcomeMsg, theme_color: themeColor } : prev)
     showToast('✅ Settings saved!')
   }
 
   async function handleCoverPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !event) return
+    showToast('Uploading cover...')
     const path = `covers/${event.id}_${Date.now()}.jpg`
-    const { error } = await supabase.storage.from('photos').upload(path, file, { contentType: file.type, upsert: true })
-    if (error) { showToast('Upload failed'); return }
+    const { error: upErr } = await supabase.storage.from('photos').upload(path, file, { contentType: file.type, upsert: true })
+    if (upErr) { showToast(`Upload failed: ${upErr.message}`); console.error(upErr); return }
     const { data } = supabase.storage.from('photos').getPublicUrl(path)
-    await supabase.from('events').update({ cover_photo: data.publicUrl }).eq('id', event.id)
+    const { error: dbErr } = await supabase.from('events').update({ cover_photo: data.publicUrl }).eq('id', event.id)
+    if (dbErr) { showToast(`Save failed: ${dbErr.message}`); console.error(dbErr); return }
     setEvent(prev => prev ? { ...prev, cover_photo: data.publicUrl } : prev)
     showToast('✅ Cover photo updated!')
+  }
+
+  async function handleDeleteEvent() {
+    if (!event) return
+    setDeleting(true)
+    // Delete all photos from storage
+    if (photos.length > 0) {
+      const paths = photos.map(p => p.storage_path)
+      await supabase.storage.from('photos').remove(paths)
+    }
+    // Delete event (cascades to photos + participants in DB)
+    await supabase.from('events').delete().eq('id', event.id)
+    router.push('/')
   }
 
   async function handleToggleLock() {
     if (!event) return
     const newLocked = !event.is_locked
-    await supabase.from('events').update({ is_locked: newLocked }).eq('id', event.id)
+    const { error } = await supabase.from('events').update({ is_locked: newLocked }).eq('id', event.id)
+    if (error) { showToast(`Error: ${error.message}`); return }
     setEvent(prev => prev ? { ...prev, is_locked: newLocked } : prev)
     showToast(newLocked ? '🔒 Event locked — no new photos' : '🔓 Event unlocked')
   }
@@ -360,6 +379,18 @@ export default function OrganizerPage() {
             >
               {savingSettings ? 'Saving...' : '✅ Save Settings'}
             </button>
+
+            {/* Danger zone */}
+            <div className="bg-white rounded-xl border border-red-200 p-4">
+              <p className="text-red-600 text-sm font-bold mb-1">⚠️ Danger Zone</p>
+              <p className="text-slate-400 text-xs mb-3">Permanently deletes the event, all photos and all participants. This cannot be undone.</p>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-semibold text-sm hover:bg-red-100 transition-colors border border-red-200"
+              >
+                🗑 Delete Event Permanently
+              </button>
+            </div>
           </div>
         ) : null}
       </div>
@@ -389,6 +420,37 @@ export default function OrganizerPage() {
           </button>
         </div>
       </div>
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="text-4xl text-center mb-3">⚠️</div>
+            <h3 className="text-slate-900 font-bold text-lg text-center mb-2">Delete Event?</h3>
+            <p className="text-slate-500 text-sm text-center mb-1">This will permanently delete:</p>
+            <ul className="text-slate-600 text-sm text-center mb-5 space-y-0.5">
+              <li>📷 {photos.length} photos</li>
+              <li>👥 {participants.length} participants</li>
+              <li>🗂 The entire event</li>
+            </ul>
+            <p className="text-red-500 text-xs text-center font-semibold mb-5">This cannot be undone.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteEvent}
+                disabled={deleting}
+                className="flex-1 bg-red-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
