@@ -61,11 +61,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col items-center justify-center px-4">
       {/* Logo */}
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-indigo-200">
-          📸
-        </div>
-        <h1 className="text-3xl font-bold text-slate-900">SnapRain</h1>
-        <p className="text-slate-500 mt-1.5 text-sm">Photos shared instantly with everyone at your event</p>
+        <img src="/logo.png" alt="SnapRain" className="w-24 h-24 mx-auto mb-3 rounded-3xl shadow-xl shadow-indigo-200" />
+        <h1 className="text-3xl font-bold text-slate-900">snap<span className="text-blue-500">Rain</span></h1>
+        <p className="text-slate-500 mt-1.5 text-sm font-medium">Every shot, shared with everyone — instantly 🌧️</p>
       </div>
 
       {/* Card */}

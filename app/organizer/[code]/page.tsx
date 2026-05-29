@@ -145,12 +145,16 @@ export default function OrganizerPage() {
 
       {/* Tabs */}
       <div className="flex border-b border-slate-200 bg-white">
-        <button onClick={() => setTab('photos')} className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'photos' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>Photos</button>
-        <button onClick={() => setTab('people')} className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'people' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>People</button>
-        <button onClick={() => setTab('requests')} className={`flex-1 py-3 text-sm font-semibold relative transition-colors ${tab === 'requests' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>
-          Requests
+        <button onClick={() => setTab('photos')} className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'photos' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50' : 'text-slate-400 hover:text-slate-600'}`}>
+          📷 Photos
+        </button>
+        <button onClick={() => setTab('people')} className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'people' ? 'text-green-600 border-b-2 border-green-500 bg-green-50' : 'text-slate-400 hover:text-slate-600'}`}>
+          👥 People
+        </button>
+        <button onClick={() => setTab('requests')} className={`flex-1 py-3 text-sm font-semibold relative transition-colors ${tab === 'requests' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50' : 'text-slate-400 hover:text-slate-600'}`}>
+          🔔 Requests
           {pendingParticipants.length > 0 && (
-            <span className="absolute top-2 right-4 w-4 h-4 bg-amber-400 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            <span className="absolute top-2 right-2 w-4 h-4 bg-amber-400 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {pendingParticipants.length}
             </span>
           )}

@@ -135,7 +135,7 @@ export default function EventPage() {
     if (unsaved.length === 0) { showToast('✅ All photos already saved!'); return }
     setDownloadingAll(true)
     setDownloadProgress({ done: 0, total: unsaved.length })
-    showToast(`Downloading ${unsaved.length} photos...`)
+    showToast(`Downloading ${unsaved.length} new photo${unsaved.length > 1 ? 's' : ''}...`)
     await downloadAllOneByOne(unsaved, (done, total) => {
       const photo = unsaved[done - 1]
       if (photo) savedPhotoIds.current.add(photo.id)

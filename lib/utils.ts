@@ -109,25 +109,12 @@ export async function downloadAllOneByOne(
   }
 }
 
-// ─── Auto-save a photo silently (for auto-save feature) ───────────────────────
+// ─── Auto-save a photo silently (no share sheet — works outside user gesture) ──
 export async function autoSavePhoto(url: string): Promise<void> {
   try {
     const res = await fetch(url)
     const blob = await res.blob()
     const filename = `snaprain_autosave_${Date.now()}.jpg`
-    const file = new File([blob], filename, { type: 'image/jpeg' })
-
-    if (
-      typeof navigator !== 'undefined' &&
-      navigator.share &&
-      navigator.canShare &&
-      navigator.canShare({ files: [file] })
-    ) {
-      await navigator.share({ files: [file], title: 'New SnapRain Photo' })
-      return
-    }
-
-    // Desktop fallback
     const blobUrl = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = blobUrl
