@@ -8,6 +8,7 @@ import {
 } from '@/lib/utils'
 import Camera from '@/components/Camera'
 import PhotoCard from '@/components/PhotoCard'
+import FilterPicker, { FilterName } from '@/components/FilterPicker'
 
 export default function EventPage() {
   const { code } = useParams<{ code: string }>()
@@ -27,6 +28,7 @@ export default function EventPage() {
   const [downloadProgress, setDownloadProgress] = useState({ done: 0, total: 0 })
   const [toast, setToast] = useState('')
   const [pendingBlob, setPendingBlob] = useState<Blob | null>(null)
+  const [filteredBlob, setFilteredBlob] = useState<Blob | null>(null)
   const [caption, setCaption] = useState('')
   const autoSaveRef = useRef(false)
   const savedPhotoIds = useRef<Set<string>>(new Set())
@@ -101,16 +103,21 @@ export default function EventPage() {
   const handleCapturedPhoto = useCallback(async (blob: Blob) => {
     if (!event || !participant) return
     setShowCamera(false)
-    setPendingBlob(blob)
+    setPendingBlob(blob)  // show filter picker
     setCaption('')
   }, [event, participant])
 
+  function handleFilterConfirm(filtered: Blob, _filter: FilterName) {
+    setFilteredBlob(filtered)
+    setPendingBlob(null)  // close filter picker, open caption modal
+  }
+
   async function handleUploadWithCaption() {
-    if (!pendingBlob || !event || !participant) return
+    if (!filteredBlob || !event || !participant) return
     setUploading(true)
-    setPendingBlob(null)
+    setFilteredBlob(null)
     try {
-      const compressed = await compressImage(pendingBlob)
+      const compressed = await compressImage(filteredBlob)
       const fileName = `${event.id}/${participant.id}_${Date.now()}.jpg`
       const { error: upErr } = await supabase.storage.from('photos').upload(fileName, compressed, { contentType: 'image/jpeg' })
       if (upErr) throw upErr
@@ -306,8 +313,17 @@ export default function EventPage() {
       {/* Camera */}
       {showCamera && <Camera onCapture={handleCapturedPhoto} onClose={() => setShowCamera(false)} uploading={uploading} />}
 
-      {/* Caption modal */}
+      {/* Filter picker */}
       {pendingBlob && (
+        <FilterPicker
+          blob={pendingBlob}
+          onConfirm={handleFilterConfirm}
+          onDiscard={() => { setPendingBlob(null); setCaption('') }}
+        />
+      )}
+
+      {/* Caption modal */}
+      {filteredBlob && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-end">
           <div className="w-full bg-white rounded-t-3xl p-6">
             <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto mb-5" />
@@ -323,7 +339,7 @@ export default function EventPage() {
             />
             <div className="flex gap-3">
               <button
-                onClick={() => { setPendingBlob(null); setCaption('') }}
+                onClick={() => { setFilteredBlob(null); setCaption('') }}
                 className="flex-1 bg-slate-100 text-slate-600 py-3.5 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors"
               >
                 Discard
