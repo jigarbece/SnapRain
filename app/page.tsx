@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { generateCode, saveParticipant, saveOrganizerKey } from '@/lib/utils'
 import HowItWorks from '@/components/HowItWorks'
+import SiteStats from '@/components/SiteStats'
 
 type CreateStep = 'form' | 'otp'
 
@@ -290,6 +291,9 @@ export default function HomePage() {
         Organizer? View your past events
         <span className="text-indigo-400 group-hover:translate-x-0.5 transition-transform">→</span>
       </button>
+
+      {/* Live counters — events / visits / photos */}
+      <SiteStats />
 
       <div className="mt-8 text-center">
         <a

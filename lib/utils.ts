@@ -136,7 +136,12 @@ export async function autoSavePhoto(url: string): Promise<void> {
 export const downloadPhoto = savePhotoToGallery
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
+// Guard every access: these run inside client components that Next.js also
+// renders on the server (SSR), where `localStorage` is undefined.
+const isBrowser = typeof window !== 'undefined'
+
 export function getParticipant(code: string): { id: string; name: string } | null {
+  if (!isBrowser) return null
   try {
     const raw = localStorage.getItem(`ps_participant_${code}`)
     return raw ? JSON.parse(raw) : null
@@ -144,25 +149,31 @@ export function getParticipant(code: string): { id: string; name: string } | nul
 }
 
 export function saveParticipant(code: string, data: { id: string; name: string }) {
+  if (!isBrowser) return
   localStorage.setItem(`ps_participant_${code}`, JSON.stringify(data))
 }
 
 export function clearParticipant(code: string) {
+  if (!isBrowser) return
   localStorage.removeItem(`ps_participant_${code}`)
 }
 
 export function getOrganizerKey(code: string): string | null {
+  if (!isBrowser) return null
   return localStorage.getItem(`ps_org_${code}`)
 }
 
 export function saveOrganizerKey(code: string, key: string) {
+  if (!isBrowser) return
   localStorage.setItem(`ps_org_${code}`, key)
 }
 
 export function getAutoSave(code: string): boolean {
+  if (!isBrowser) return false
   return localStorage.getItem(`ps_autosave_${code}`) === 'true'
 }
 
 export function setAutoSave(code: string, val: boolean) {
+  if (!isBrowser) return
   localStorage.setItem(`ps_autosave_${code}`, val ? 'true' : 'false')
 }
