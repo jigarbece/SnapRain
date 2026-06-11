@@ -189,20 +189,20 @@ function Milestone({ index }: { index: number }) {
 }
 
 export default function HowItWorks() {
-  const [mounted, setMounted] = useState(false)
-  const [showPrompt, setShowPrompt] = useState(false)
   const [open, setOpen] = useState(false)
   const [slide, setSlide] = useState(0)
 
   const last = STEPS.length - 1
 
-  // First visit → offer the tour. Returning visitors just get the button.
+  // First visit → auto-start the tour. Once seen/skipped it won't auto-open again.
   useEffect(() => {
-    setMounted(true)
     try {
-      if (!localStorage.getItem(STORAGE_KEY)) setShowPrompt(true)
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        setSlide(0)
+        setOpen(true)
+      }
     } catch {
-      /* localStorage unavailable — fall back to button only */
+      /* localStorage unavailable — tour just won't auto-open */
     }
   }, [])
 
@@ -212,14 +212,7 @@ export default function HowItWorks() {
     } catch {
       /* ignore */
     }
-    setShowPrompt(false)
   }, [])
-
-  const startTour = useCallback(() => {
-    markSeen()
-    setSlide(0)
-    setOpen(true)
-  }, [markSeen])
 
   const openTour = useCallback(() => {
     setSlide(0)
@@ -250,42 +243,15 @@ export default function HowItWorks() {
 
   return (
     <div className="w-full max-w-sm mb-4 flex flex-col items-center">
-      {/* First-visit prompt */}
-      {mounted && showPrompt ? (
-        <div className="w-full rounded-2xl border border-indigo-100 bg-white p-4 shadow-lg shadow-indigo-50">
-          <div className="flex items-start gap-3">
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-xl">👋</div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-slate-900">New here? See how SnapRain works</p>
-              <p className="mt-0.5 text-xs text-slate-500">A 30-second tour — create, share, snap, save.</p>
-            </div>
-          </div>
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={startTour}
-              className="flex-1 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-200 transition-colors hover:bg-indigo-700"
-            >
-              ▶ Start Tour
-            </button>
-            <button
-              onClick={markSeen}
-              className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-500 transition-colors hover:bg-slate-200"
-            >
-              Skip
-            </button>
-          </div>
-        </div>
-      ) : (
-        // Returning visitor / after skip → reopenable button
-        <button
-          onClick={openTour}
-          className="group inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-500 shadow-sm transition-all hover:border-indigo-300 hover:text-indigo-600"
-        >
-          <span className="text-[11px]">📖</span>
-          How It Works
-          <span className="text-indigo-400 transition-transform group-hover:translate-x-0.5">→</span>
-        </button>
-      )}
+      {/* Reopenable "How It Works" button (tour also auto-opens on first visit) */}
+      <button
+        onClick={openTour}
+        className="group inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-500 shadow-sm transition-all hover:border-indigo-300 hover:text-indigo-600"
+      >
+        <span className="text-[11px]">📖</span>
+        How It Works
+        <span className="text-indigo-400 transition-transform group-hover:translate-x-0.5">→</span>
+      </button>
 
       {/* Slideshow tour modal */}
       {open && (
