@@ -220,18 +220,21 @@ export default function HomePage() {
                       required
                     />
                   </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-500 block mb-1.5">
-                      Your Email <span className="text-indigo-400 font-normal">(to access events from any device)</span>
-                    </label>
-                    <input
-                      type="email"
-                      className="w-full bg-slate-50 text-slate-900 rounded-xl px-4 py-3 text-sm outline-none border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 placeholder-slate-400 transition"
-                      placeholder="you@example.com (optional)"
-                      value={organizerEmail}
-                      onChange={e => setOrganizerEmail(e.target.value)}
-                    />
-                  </div>
+                  {/* Email field hidden for now — restore this block to re-enable cross-device access via OTP */}
+                  {false && (
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 block mb-1.5">
+                        Your Email <span className="text-indigo-400 font-normal">(to access events from any device)</span>
+                      </label>
+                      <input
+                        type="email"
+                        className="w-full bg-slate-50 text-slate-900 rounded-xl px-4 py-3 text-sm outline-none border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 placeholder-slate-400 transition"
+                        placeholder="you@example.com (optional)"
+                        value={organizerEmail}
+                        onChange={e => setOrganizerEmail(e.target.value)}
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className="text-xs font-medium text-slate-500 block mb-1.5">Event Expires</label>
                     <select
@@ -282,15 +285,17 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* My Past Events link */}
-      <button
-        onClick={() => router.push('/my-events')}
-        className="mt-5 flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-5 py-3 text-sm font-semibold text-slate-600 shadow-sm hover:border-indigo-300 hover:text-indigo-600 hover:shadow-md transition-all group"
-      >
-        <span className="text-base">👑</span>
-        Organizer? View your past events
-        <span className="text-indigo-400 group-hover:translate-x-0.5 transition-transform">→</span>
-      </button>
+      {/* My Past Events link — hidden for now */}
+      {false && (
+        <button
+          onClick={() => router.push('/my-events')}
+          className="mt-5 flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-5 py-3 text-sm font-semibold text-slate-600 shadow-sm hover:border-indigo-300 hover:text-indigo-600 hover:shadow-md transition-all group"
+        >
+          <span className="text-base">👑</span>
+          Organizer? View your past events
+          <span className="text-indigo-400 group-hover:translate-x-0.5 transition-transform">→</span>
+        </button>
+      )}
 
       {/* Live counters — events / visits / photos */}
       <SiteStats />
