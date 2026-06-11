@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { generateCode, saveParticipant, saveOrganizerKey } from '@/lib/utils'
+import HowItWorks from '@/components/HowItWorks'
 
 type CreateStep = 'form' | 'otp'
 
@@ -120,19 +121,21 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-blue-50 flex flex-col items-center justify-center px-4 pb-16">
       {/* Branding */}
-      <div className="text-center mb-10">
-        <div className="relative inline-block mb-5">
+      <div className="text-center mb-4">
+        <div className="relative inline-block mb-3">
           <div className="absolute inset-0 bg-indigo-400 rounded-3xl blur-xl opacity-30 scale-110" />
           <img src="/logo.png" alt="SnapRain" className="relative w-28 h-28 mx-auto rounded-3xl shadow-2xl shadow-indigo-300 object-cover" />
         </div>
-        <h1 className="text-4xl font-black text-slate-900 tracking-tight">snap<span className="text-indigo-500">Rain</span></h1>
-        <p className="text-slate-500 mt-2 text-sm font-medium leading-relaxed">Every shot, shared with everyone<br/>— instantly 🌧️</p>
-        <div className="flex items-center justify-center gap-4 mt-4">
+        <p className="text-slate-500 text-sm font-medium leading-relaxed">Every shot, shared with everyone<br/>— instantly 🌧️</p>
+        <div className="flex items-center justify-center gap-4 mt-3">
           {['📸 No signup', '⚡ Real-time', '💾 Auto-save'].map(f => (
             <span key={f} className="text-[10px] font-semibold text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">{f}</span>
           ))}
         </div>
       </div>
+
+      {/* How It Works — animated flow between the hero tagline and the Create/Join card */}
+      <HowItWorks />
 
       {/* Card */}
       <div className="w-full max-w-sm bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-100">
