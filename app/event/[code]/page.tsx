@@ -35,8 +35,10 @@ export default function EventPage() {
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+  const [batchUpload, setBatchUpload] = useState({ done: 0, total: 0 })
   const autoSaveRef = useRef(false)
   const savedPhotoIds = useRef<Set<string>>(new Set())
+  const galleryInputRef = useRef<HTMLInputElement>(null)
 
   const participant = getParticipant(code)
   const isOrganizer = !!getOrganizerKey(code)
@@ -154,6 +156,41 @@ export default function EventPage() {
       setUploading(false)
       setCaption('')
     }
+  }
+
+  async function handleGalleryUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || [])
+    e.target.value = ''  // reset so the same files can be re-picked
+    if (files.length === 0 || !event || !participant) return
+    if (event.is_locked) { showToast('🔒 Event is locked — no new photos'); return }
+
+    const images = files.filter(f => f.type.startsWith('image/'))
+    if (images.length === 0) { showToast('No images selected'); return }
+
+    setBatchUpload({ done: 0, total: images.length })
+    let ok = 0
+    for (let i = 0; i < images.length; i++) {
+      try {
+        const compressed = await compressImage(images[i])
+        const fileName = `${event.id}/${participant.id}_${Date.now()}_${i}.jpg`
+        const { error: upErr } = await supabase.storage.from('photos').upload(fileName, compressed, { contentType: 'image/jpeg' })
+        if (upErr) throw upErr
+        const { data: urlData } = supabase.storage.from('photos').getPublicUrl(fileName)
+        const { data: rec, error: dbErr } = await supabase.from('photos').insert({
+          event_id: event.id, participant_id: participant.id, participant_name: participant.name,
+          storage_path: fileName, url: urlData.publicUrl, caption: null, media_type: 'photo',
+        }).select().single()
+        if (dbErr) throw dbErr
+        setPhotos(prev => prev.find(p => p.id === rec.id) ? prev : [rec, ...prev])
+        savedPhotoIds.current.add(rec.id)
+        ok++
+      } catch (err) {
+        console.error(err)
+      }
+      setBatchUpload({ done: i + 1, total: images.length })
+    }
+    setBatchUpload({ done: 0, total: 0 })
+    showToast(ok === images.length ? `📸 ${ok} photo${ok > 1 ? 's' : ''} shared!` : `Shared ${ok} of ${images.length}`)
   }
 
   async function handleDelete(photoId: string) {
@@ -344,6 +381,26 @@ export default function EventPage() {
           >
             <span className="text-2xl">{event?.is_locked ? '🔒' : '📸'}</span>
           </button>
+
+          {/* Upload from gallery (multiple) */}
+          <button
+            onClick={() => event?.is_locked ? showToast('🔒 Event is locked — no new photos') : galleryInputRef.current?.click()}
+            disabled={batchUpload.total > 0}
+            className="flex flex-col items-center gap-1 disabled:opacity-40 text-slate-400 hover:text-indigo-600 transition-colors"
+          >
+            <span className="text-2xl">🖼️</span>
+            <span className="text-[10px] font-medium">
+              {batchUpload.total > 0 ? `${batchUpload.done}/${batchUpload.total}` : 'Upload'}
+            </span>
+          </button>
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleGalleryUpload}
+          />
 
           {/* Auto-save */}
           <button
